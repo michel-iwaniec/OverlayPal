@@ -13,6 +13,6 @@ after_build:
   - cd ..
 
 artifacts:
-  - path: release
+  - path: OverlayPal-Win64-release
     name: OverlayPal-Win64-release-wip
     type: zip
