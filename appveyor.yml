@@ -6,7 +6,9 @@ build_script:
   - qmake OverlayPal.pro -spec win32-msvc "CONFIG+=qtquickcompiler"
   - nmake
 after_build:
+  - cd release
   - windeployqt.exe --qmldir src\qml OverlayPal.exe
+  - cd ..
 
 artifacts:
   - path: OverlayPal-Win64-release-wip.zip
