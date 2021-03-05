@@ -21,6 +21,8 @@
 #include <windows.h>
 #endif
 
+#include <stdexcept>
+
 #include "SubProcess.h"
 
 #ifdef _WIN32
