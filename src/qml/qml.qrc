@@ -1,0 +1,9 @@
+<RCC>
+    <qresource prefix="/">
+        <file>main.qml</file>
+        <file>const.js</file>
+        <file>HardwarePalette.js</file>
+        <file>GridLayerCanvas.qml</file>
+        <file>ImageLoadingProxy.qml</file>
+    </qresource>
+</RCC>
