@@ -7,7 +7,7 @@ build_script:
   - nmake
 after_build:
   - cd release
-  - windeployqt.exe --qmldir src\qml OverlayPal.exe
+  - windeployqt.exe --qmldir ..\src\qml OverlayPal.exe
   - cd ..
 
 artifacts:
