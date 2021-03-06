@@ -17,6 +17,7 @@ after_build:
   - xcopy ..\nespalettes .\
   - xcopy ..\src\cmpl\*.cmpl .\
   - mkdir CmplWorkPath
+  - 7z x ..\thirdparty\cmplbin\Cmpl-1-11-0-win.zip
   - windeployqt.exe --qmldir ..\src\qml OverlayPal.exe
   - cd ..
 artifacts:
