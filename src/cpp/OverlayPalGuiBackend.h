@@ -157,6 +157,8 @@ protected:
 
     static uint8_t indexInPalette(const std::set<uint8_t>& palette, uint8_t color);
 
+    static QString urlToLocal(const QString& url);
+
 private:
     int mTimeOut;
     bool mTrackInputImage;

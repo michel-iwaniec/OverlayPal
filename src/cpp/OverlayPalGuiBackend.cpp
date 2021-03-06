@@ -19,6 +19,7 @@
 #include <QCoreApplication>
 #include <QtConcurrent/QtConcurrentRun>
 #include <QQmlEngine>
+#include <QUrl>
 
 #include <iostream>
 #include <iomanip>
@@ -292,8 +293,9 @@ QString OverlayPalGuiBackend::inputImageFilename() const
 
 //---------------------------------------------------------------------------------------------------------------------
 
-void OverlayPalGuiBackend::setInputImageFilename(const QString& inputImageFilename)
+void OverlayPalGuiBackend::setInputImageFilename(const QString& inputImageFilenameUrl)
 {
+    QString inputImageFilename(urlToLocal(inputImageFilenameUrl));
     if(inputImageFilename != mInputImageFilename)
     {
         if(mInputFileWatcher.files().size() > 0)
@@ -933,6 +935,13 @@ uint8_t OverlayPalGuiBackend::indexInPalette(const std::set<uint8_t>& palette, u
 
 //---------------------------------------------------------------------------------------------------------------------
 
+QString OverlayPalGuiBackend::urlToLocal(const QString &url)
+{
+    return QUrl(url).toLocalFile();
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+
 QVariantList OverlayPalGuiBackend::debugSpritesOverlay() const
 {
     const std::vector<std::set<uint8_t>>& palettes = mOverlayOptimiser.palettes();
@@ -968,5 +977,6 @@ QVariantList OverlayPalGuiBackend::debugSpritesOverlay() const
 void OverlayPalGuiBackend::saveOutputImage(QString filename, int paletteMask)
 {
     QImage img = outputImage(paletteMask);
+    filename = urlToLocal(filename);
     img.save(filename);
 }
