@@ -16,7 +16,7 @@ configuration:
 
 for:
 
-    -
+  -
     matrix:
       only:
         - job_name: win64
@@ -47,7 +47,7 @@ for:
 
 
 
-    -
+  -
     matrix:
       only:
         - job_name: linux_x64
