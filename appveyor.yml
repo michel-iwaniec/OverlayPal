@@ -13,6 +13,8 @@ build_script:
 after_build:
   - mkdir OverlayPal-dev-win64-%CONFIGURATION%
   - cd OverlayPal-dev-win64-%CONFIGURATION%
+  - copy ..\LICENSE .\
+  - copy ..\README.md .\
   - copy ..\release\OverlayPal.exe
   - xcopy ..\nespalettes .\
   - xcopy ..\src\cmpl\*.cmpl .\
