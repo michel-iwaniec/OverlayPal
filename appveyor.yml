@@ -4,16 +4,16 @@ install:
   - set PATH=%PATH%;%QTDIR%\bin;C:\Qt\5.12.6\msvc2017_64\bin
   - call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvars64.bat"
 build_script:
-  - qmake OverlayPal.pro -spec win32-msvc "CONFIG+=qtquickcompiler"
+  - qmake OverlayPal.pro -spec win32-msvc "CONFIG+=debug" "CONFIG+=qml_debug"
   - nmake
 after_build:
-  - mkdir OverlayPal-Win64-release
-  - cd OverlayPal-Win64-release
+  - mkdir OverlayPal-Win64-debug
+  - cd OverlayPal-Win64-debug
   - copy ..\release\OverlayPal.exe
   - windeployqt.exe --qmldir ..\src\qml OverlayPal.exe
   - cd ..
 
 artifacts:
-  - path: OverlayPal-Win64-release
-    name: OverlayPal-Win64-release-wip
+  - path: OverlayPal-Win64-debug
+    name: OverlayPal-Win64-debug-wip
     type: zip
