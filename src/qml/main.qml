@@ -794,8 +794,7 @@ Window {
             selectExisting: true
             onAccepted: {
                 visible = false
-                var filename = fileUrls[0].replace("file:///", "");
-                optimiser.inputImageFilename = filename
+                optimiser.inputImageFilename = fileUrls[0]
             }
             onRejected: {
                 visible = false
@@ -815,7 +814,6 @@ Window {
             selectExisting: false
             onAccepted: {
                 visible = false
-                var filename = fileUrls[0].replace("file:///", "");
                 // Apply current mask when saving output image
                 var maskArray = [palette0_checkBox.checked,
                                  palette1_checkBox.checked,
@@ -830,7 +828,7 @@ Window {
                 {
                     mask |= (Number(maskArray[i]) << i);
                 }
-                optimiser.saveOutputImage(filename, mask);
+                optimiser.saveOutputImage(fileUrls[0], mask);
             }
             onRejected: {
                 visible = false

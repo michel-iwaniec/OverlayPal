@@ -54,6 +54,7 @@ class OverlayPalGuiBackend : public QObject
 
 public:
     explicit OverlayPalGuiBackend(QObject *parent = nullptr);
+    ~OverlayPalGuiBackend() override;
 
     QString inputImageFilename() const;
     void setInputImageFilename(const QString& inputImageFilename);
@@ -155,6 +156,8 @@ protected:
     static uint8_t detectBackgroundColor(const QImage& image, uint8_t oldBackgroundColor);
 
     static uint8_t indexInPalette(const std::set<uint8_t>& palette, uint8_t color);
+
+    static QString urlToLocal(const QString& url);
 
 private:
     int mTimeOut;

@@ -18,6 +18,8 @@
 
 #include <QCoreApplication>
 #include <QtConcurrent/QtConcurrentRun>
+#include <QQmlEngine>
+#include <QUrl>
 
 #include <iostream>
 #include <iomanip>
@@ -82,13 +84,26 @@ OverlayPalGuiBackend::OverlayPalGuiBackend(QObject *parent):
     mHardwarePaletteName("palgen"),
     mOutputImage(ScreenWidth, ScreenHeight, QImage::Format_Indexed8),
     mBackgroundColor(0),
+    mInputImage(ScreenWidth, ScreenHeight, QImage::Format_Indexed8),
     mInputImageIndexed(ScreenWidth, ScreenHeight, QImage::Format_Indexed8)
 {
+    mInputImage.fill(0);
+    mInputImageIndexed.fill(0);
+    mOutputImage.fill(0);
     QObject::connect(&mInputFileWatcher, SIGNAL(fileChanged(QString)), this, SLOT(handleInputFileChanged(QString)));
     std::string executablePath = QCoreApplication::applicationDirPath().toStdString();
     mOverlayOptimiser.setExecutablePath(executablePath);
     mOverlayOptimiser.setWorkPath(executablePath + "/" + "CmplWorkPath");
     loadHardwarePalettes(QString(executablePath.c_str()) + QString("/nespalettes"));
+    // Prevent QML engine from taking ownership of and destroying models
+    QQmlEngine::setObjectOwnership(&mPaletteModel, QQmlEngine::CppOwnership);
+    QQmlEngine::setObjectOwnership(&mHardwarePaletteNamesModel, QQmlEngine::CppOwnership);
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+
+OverlayPalGuiBackend::~OverlayPalGuiBackend()
+{
 }
 
 //---------------------------------------------------------------------------------------------------------------------
@@ -278,8 +293,9 @@ QString OverlayPalGuiBackend::inputImageFilename() const
 
 //---------------------------------------------------------------------------------------------------------------------
 
-void OverlayPalGuiBackend::setInputImageFilename(const QString& inputImageFilename)
+void OverlayPalGuiBackend::setInputImageFilename(const QString& inputImageFilenameUrl)
 {
+    QString inputImageFilename(urlToLocal(inputImageFilenameUrl));
     if(inputImageFilename != mInputImageFilename)
     {
         if(mInputFileWatcher.files().size() > 0)
@@ -919,6 +935,13 @@ uint8_t OverlayPalGuiBackend::indexInPalette(const std::set<uint8_t>& palette, u
 
 //---------------------------------------------------------------------------------------------------------------------
 
+QString OverlayPalGuiBackend::urlToLocal(const QString &url)
+{
+    return QUrl(url).toLocalFile();
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+
 QVariantList OverlayPalGuiBackend::debugSpritesOverlay() const
 {
     const std::vector<std::set<uint8_t>>& palettes = mOverlayOptimiser.palettes();
@@ -931,7 +954,7 @@ QVariantList OverlayPalGuiBackend::debugSpritesOverlay() const
         m["y"] = s.y;
         // Make palette start at 0 to match "SPR0" designation
         m["p"] = s.p - 4;
-        m["numColors"] = s.colors.size();
+        m["numColors"] = int(s.colors.size());
         std::vector<uint8_t> srcColors;
         std::vector<uint8_t> dstColors;
         uint8_t i = 1;
@@ -954,5 +977,6 @@ QVariantList OverlayPalGuiBackend::debugSpritesOverlay() const
 void OverlayPalGuiBackend::saveOutputImage(QString filename, int paletteMask)
 {
     QImage img = outputImage(paletteMask);
+    filename = urlToLocal(filename);
     img.save(filename);
 }
