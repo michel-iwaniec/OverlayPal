@@ -9,7 +9,7 @@ build_script:
 after_build:
   - mkdir OverlayPal-Win64-debug
   - cd OverlayPal-Win64-debug
-  - copy ..\release\OverlayPal.exe
+  - copy ..\debug\OverlayPal.exe
   - windeployqt.exe --qmldir ..\src\qml OverlayPal.exe
   - cd ..
 
