@@ -22,5 +22,5 @@ after_build:
   - cd ..
 artifacts:
   - path: OverlayPal-dev-win64-%CONFIGURATION%
-    name: OverlayPal-dev-win64-%CONFIGURATION%-wip
+    name: OverlayPal-dev-win64-%CONFIGURATION%
     type: zip
