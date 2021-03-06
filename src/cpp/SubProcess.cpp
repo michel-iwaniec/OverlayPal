@@ -16,16 +16,24 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 //
 
+#include <stdexcept>
+#include <string>
+#include <vector>
+
 #ifdef _WIN32
 #define NOMINMAX
 #include <windows.h>
+#else
+#include <stdlib.h>
+#include <unistd.h>
+#include <sys/wait.h>
 #endif
 
 #include "SubProcess.h"
 
 #ifdef _WIN32
-int executeProcess(const std::string& exeFilename,
-                   const std::string& params,
+int executeProcess(std::string exeFilename,
+                   std::string params,
                    int timeOut)
 {
     // Create structures
@@ -69,6 +77,55 @@ int executeProcess(const std::string& exeFilename,
     {
         // Process invocation failed
         throw std::runtime_error("Failed to invoke process");
+    }
+}
+#else
+
+std::vector<char*> splitParams(std::string& params)
+{
+    size_t length = params.size();
+    std::vector<char*> charPtrs;
+    for(size_t i = 0; i < length; i++)
+    {
+        if(params[i] == ' ')
+        {
+            params[i] = 0;
+            if(i > 0 && i < length - 1)
+            {
+                charPtrs.push_back(&params[i+1]);
+            }
+        }
+    }
+    charPtrs.push_back(nullptr);
+    return charPtrs;
+}
+
+int executeProcess(std::string exeFilename,
+                   std::string params,
+                   int timeOut)
+{
+    // Split space-separated parameters into individual asciiz strings to create argv
+    std::vector<char*> ptrs = splitParams(params);
+    char* exeFilenameP = exeFilename.data();
+    ptrs.insert(ptrs.begin(), 1, exeFilenameP);
+    char** argv = ptrs.data();
+    // Fork new process for execv call
+    pid_t pid = fork();
+    if(pid == -1)
+    {
+        throw std::runtime_error("fork() failed in executeProcess");
+    }
+    else if(pid == 0)
+    {
+        // Run program in forked process - new process also terminates here
+        execv(exeFilename.c_str(), argv);
+    }
+    else
+    {
+        // Wait for forked process to finish
+        int exitCode = -1;
+        waitpid(pid, &exitCode, 0);
+        return exitCode;
     }
 }
 #endif

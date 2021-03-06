@@ -22,6 +22,6 @@
 
 #include <string>
 
-int executeProcess(const std::string& exeFilename, const std::string& params, int timeOut);
+int executeProcess(std::string exeFilename, std::string params, int timeOut);
 
 #endif // SUB_PROCESS_H

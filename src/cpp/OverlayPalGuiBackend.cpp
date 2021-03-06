@@ -18,6 +18,7 @@
 
 #include <QCoreApplication>
 #include <QtConcurrent/QtConcurrentRun>
+#include <QQmlEngine>
 
 #include <iostream>
 #include <iomanip>
@@ -82,13 +83,26 @@ OverlayPalGuiBackend::OverlayPalGuiBackend(QObject *parent):
     mHardwarePaletteName("palgen"),
     mOutputImage(ScreenWidth, ScreenHeight, QImage::Format_Indexed8),
     mBackgroundColor(0),
+    mInputImage(ScreenWidth, ScreenHeight, QImage::Format_Indexed8),
     mInputImageIndexed(ScreenWidth, ScreenHeight, QImage::Format_Indexed8)
 {
+    mInputImage.fill(0);
+    mInputImageIndexed.fill(0);
+    mOutputImage.fill(0);
     QObject::connect(&mInputFileWatcher, SIGNAL(fileChanged(QString)), this, SLOT(handleInputFileChanged(QString)));
     std::string executablePath = QCoreApplication::applicationDirPath().toStdString();
     mOverlayOptimiser.setExecutablePath(executablePath);
     mOverlayOptimiser.setWorkPath(executablePath + "/" + "CmplWorkPath");
     loadHardwarePalettes(QString(executablePath.c_str()) + QString("/nespalettes"));
+    // Prevent QML engine from taking ownership of and destroying models
+    QQmlEngine::setObjectOwnership(&mPaletteModel, QQmlEngine::CppOwnership);
+    QQmlEngine::setObjectOwnership(&mHardwarePaletteNamesModel, QQmlEngine::CppOwnership);
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+
+OverlayPalGuiBackend::~OverlayPalGuiBackend()
+{
 }
 
 //---------------------------------------------------------------------------------------------------------------------
@@ -931,7 +945,7 @@ QVariantList OverlayPalGuiBackend::debugSpritesOverlay() const
         m["y"] = s.y;
         // Make palette start at 0 to match "SPR0" designation
         m["p"] = s.p - 4;
-        m["numColors"] = s.colors.size();
+        m["numColors"] = int(s.colors.size());
         std::vector<uint8_t> srcColors;
         std::vector<uint8_t> dstColors;
         uint8_t i = 1;

@@ -54,6 +54,7 @@ class OverlayPalGuiBackend : public QObject
 
 public:
     explicit OverlayPalGuiBackend(QObject *parent = nullptr);
+    ~OverlayPalGuiBackend() override;
 
     QString inputImageFilename() const;
     void setInputImageFilename(const QString& inputImageFilename);

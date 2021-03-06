@@ -19,6 +19,7 @@
 #include <unordered_map>
 #include <map>
 #include <tuple>
+#include <limits>
 
 #include "Array2D.h"
 #include "GridLayer.h"
@@ -50,7 +51,7 @@ Image2D shiftImageOptimal(const Image2D& image, uint8_t backgroundColor, int cel
     const int h = image.height();
     std::map<std::pair<int, int>, int> shiftCosts;
     auto bestCostXY = std::make_pair(minX, minY);
-    shiftCosts[bestCostXY] = INT_MAX;
+    shiftCosts[bestCostXY] = std::numeric_limits<int>::max();
     for(int y = minY; y <= maxY; y++)
     {
         for(int x = minX; x <= maxX; x++)
