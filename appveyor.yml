@@ -14,6 +14,9 @@ after_build:
   - mkdir OverlayPal-dev-win64-${CONFIGURATION}
   - cd OverlayPal-dev-win64-${CONFIGURATION}
   - copy ..\release\OverlayPal.exe
+  - xcopy ..\nespalettes .\
+  - xcopy ..\*.cmpl .\
+  - mkdir CmplWorkPath
   - windeployqt.exe --qmldir ..\src\qml OverlayPal.exe
   - cd ..
 artifacts:
