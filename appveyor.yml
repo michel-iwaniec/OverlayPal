@@ -1,0 +1,28 @@
+image: Visual Studio 2019
+
+configuration:
+  - Release
+
+install:
+  - set QTDIR=C:\Qt\5.15\msvc2019_64
+  - set PATH=%PATH%;%QTDIR%\bin;C:\Qt\5.15\msvc2019_64\bin
+  - call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars64.bat"
+build_script:
+  - qmake OverlayPal.pro -spec win32-msvc "CONFIG+=qtquickcompiler"
+  - nmake
+after_build:
+  - mkdir OverlayPal-dev-win64-%CONFIGURATION%
+  - cd OverlayPal-dev-win64-%CONFIGURATION%
+  - copy ..\LICENSE .\
+  - copy ..\release\OverlayPal.exe
+  - xcopy ..\nespalettes .\nespalettes\
+  - copy ..\src\cmpl\*.cmpl .\
+  - mkdir CmplWorkPath
+  - echo "CMPL working path" > CmplWorkPath\README.md
+  - 7z x ..\thirdparty\cmplbin\Cmpl-1-11-0-win.zip
+  - windeployqt.exe --qmldir ..\src\qml OverlayPal.exe
+  - cd ..
+artifacts:
+  - path: OverlayPal-dev-win64-%CONFIGURATION%
+    name: OverlayPal-dev-win64-%CONFIGURATION%
+    type: zip
