@@ -62,7 +62,7 @@ for:
       - mkdir OverlayPal-dev-linux_x64-${CONFIGURATION}
       - cd OverlayPal-dev-linux_x64-${CONFIGURATION}
       - cp ../LICENSE ./
-      - cp ../release/OverlayPal ./
+      - cp ../OverlayPal ./
       - cp -r ../nespalettes ./
       - cp ../src/cmpl/*.cmpl ./
       - mkdir CmplWorkPath
