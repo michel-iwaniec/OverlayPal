@@ -1,7 +1,25 @@
-image: Visual Studio 2019
+version: 1.0.{build}
+
+environment:
+  matrix:
+
+
+  - job_name: win64
+    appveyor_build_worker_image: Visual Studio 2019
+
+  - job_name: linux_x64
+    appveyor_build_worker_image: Ubuntu1804
+
 
 configuration:
   - Release
+
+for:
+
+-
+matrix:
+  only:
+    - job_name: win64
 
 install:
   - set QTDIR=C:\Qt\5.15\msvc2019_64
@@ -25,4 +43,32 @@ after_build:
 artifacts:
   - path: OverlayPal-dev-win64-%CONFIGURATION%
     name: OverlayPal-dev-win64-%CONFIGURATION%
+    type: zip
+
+
+
+-
+matrix:
+  only:
+    - job_name: linux_x64
+
+install:
+  - PATH=$HOME/Qt/5.15/gcc_64/bin:$PATH
+build_script:
+  - qmake OverlayPal.pro "CONFIG+=qtquickcompiler"
+  - make
+after_build:
+  - mkdir OverlayPal-dev-linux_x64-${CONFIGURATION}
+  - cd OverlayPal-dev-linux_x64-${CONFIGURATION}
+  - cp ../LICENSE ./
+  - cp ../release/OverlayPal
+  - cp -r ../nespalettes ./
+  - cp ../src/cmpl/*.cmpl ./
+  - mkdir CmplWorkPath
+  - echo "CMPL working path" > CmplWorkPath/README.md
+  - tar -xvf ../thirdparty/cmplbin/Cmpl-1-12-0-Linux64.tar.gz
+  - cd ..
+artifacts:
+  - path: OverlayPal-dev-linux_x64-${CONFIGURATION}
+    name: OverlayPal-dev-linux_x64-${CONFIGURATION}
     type: zip
