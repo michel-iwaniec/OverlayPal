@@ -69,7 +69,5 @@ for:
       - echo "CMPL working path" > CmplWorkPath/README.md
       - tar -xvf ../thirdparty/cmplbin/Cmpl-1-12-0-Linux64.tar.gz
       - cd ..
-    artifacts:
-      - path: OverlayPal-dev-linux_x64-${CONFIGURATION}
-        name: OverlayPal-dev-linux_x64-${CONFIGURATION}
-        type: zip
+      - tar -czvf OverlayPal-dev-linux_x64-${CONFIGURATION}.tar.gz OverlayPal-dev-linux_x64-${CONFIGURATION}
+      - appveyor PushArtifact OverlayPal-dev-linux_x64-${CONFIGURATION}.tar.gz
