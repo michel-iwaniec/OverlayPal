@@ -38,6 +38,41 @@ Window {
     property var loaderProxy: null
     property var imgComponent: null
 
+    Component.onCompleted: {
+        // Adapt window to either a 1080p screen or a less-than-1080p-screen.
+        // TODO: Scaling choice needs to be more flexible going forward.
+        var activePortion = 0.915;
+        var zoom = 3;
+        var uiScale = 1.0;
+        if(Screen.width < 1920)
+        {
+            width = Screen.width * activePortion;
+            height = Screen.height * activePortion;
+            zoom = 2;
+            uiScale = 0.7;
+        }
+        else
+        {
+            width = Screen.width * activePortion;
+            height = Screen.height * activePortion;
+            zoom = 3;
+            uiScale = 1.0;
+        }
+        // Set canvas sizes
+        var w = 256 * zoom;
+        var h = 240 * zoom;
+        srcImageGroupBox.contentWidth = w;
+        srcImageGroupBox.contentHeight = h;
+        dstImageGroupBox.contentWidth = w;
+        dstImageGroupBox.contentHeight = h;
+        srcImageCanvas.zoom = zoom;
+        dstImageCanvas.zoom = zoom;
+        paletteGroupBox.contentHeight = h;
+        //width = Math.min()
+        // Set UI scale factor
+        uiInteractionRow.scale = uiScale;
+    }
+
     OverlayPalGuiBackend {
         id: optimiser
         shiftX: 0
@@ -126,6 +161,7 @@ Window {
     }
 
     Column {
+        id: column
         x: 16
         y: 10
 
@@ -133,6 +169,7 @@ Window {
 
             GroupBox {
                 id: srcImageGroupBox
+                padding: 6
                 contentHeight: 720
                 contentWidth: 768
                 title: "Input Image"
@@ -145,6 +182,7 @@ Window {
 
             GroupBox {
                 id: dstImageGroupBox
+                padding: 6
                 contentHeight: 720
                 contentWidth: 768
                 title: "Converted image"
@@ -164,6 +202,7 @@ Window {
             GroupBox {
                 id: paletteGroupBox
                 width: 200
+                padding: 6
                 contentHeight: 720
                 contentWidth: 128
                 transformOrigin: Item.Center
@@ -255,7 +294,12 @@ Window {
         }
 
         Row {
-            height: 200
+            id: uiInteractionRow
+            height: 180
+            anchors.left: parent.left
+            transformOrigin: Item.TopLeft
+            anchors.leftMargin: 0
+            scale: 1.0
 
             GroupBox {
                 id: inputImageGroupBox
@@ -342,12 +386,16 @@ Window {
                 x: 507
                 width: 200
                 height: 200
+                padding: 12
+                scale: 1
                 title: qsTr("Image shift before conversion")
 
                 GridLayout {
-                    rowSpacing: 2
+                    height: 112
+                    rowSpacing: -23
                     anchors.bottomMargin: 50
                     anchors.fill: parent
+                    columnSpacing: 6
                     rows: 2
                     columns: 2
 
@@ -399,12 +447,12 @@ Window {
                 Button {
                     id: shiftAutoOptimalButton
                     x: 35
-                    y: 110
+                    y: 122
                     width: 141
                     height: 40
                     text: qsTr("Autodetect optimal")
                     anchors.bottom: parent.bottom
-                    anchors.bottomMargin: 4
+                    anchors.bottomMargin: 14
                     anchors.right: parent.right
                     anchors.rightMargin: 0
                     Component.onCompleted: {
@@ -696,7 +744,7 @@ Window {
                 Button {
                     id: saveImageButton
                     x: 0
-                    y: 114
+                    y: 98
                     width: 206
                     height: 40
                     text: qsTr("Save converted PNG...")
@@ -748,7 +796,8 @@ Window {
 
                     CheckBox {
                         id: autoConversionCheckBox
-                        text: qsTr("Automatic")
+                        text: qsTr("Auto")
+                        antialiasing: true
                         onCheckedChanged: {
                             if(checked)
                             {

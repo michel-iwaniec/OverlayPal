@@ -105,20 +105,32 @@ Item {
     }
 
     onCellDebugModeChanged: {
-        canvas.requestPaint()
+        canvas.requestPaint();
     }
 
     onSpriteDebugModeChanged: {
-        canvas.requestPaint()
+        canvas.requestPaint();
+    }
+
+    onZoomChanged: {
+        var w = 256;
+        var h = 240;
+        gridLayerCanvas.width = zoom * w;
+        gridLayerCanvas.height = zoom * h;
+        canvas.width = zoom * w;
+        canvas.height = zoom * h;
+        canvas.requestPaint();
     }
 
     function paintOnCanvas(ctx)
     {
+        var w = 256;
+        var h = 240;
         ctx.reset();
         // Draw backdrop
         if(backdropImage)
         {
-            ctx.drawImage(backdropImage, 0, 0, 768, 720);
+            ctx.drawImage(backdropImage, 0, 0, zoom * w, zoom * h);
         }
         // Draw each palette layer
         for(var i = 0; i < showPaletteGroup.length; i++)
@@ -128,7 +140,7 @@ Item {
                 var img = paletteGroupImages[i]
                 if(img)
                 {
-                    ctx.drawImage(img, 0, 0, 768, 720);
+                    ctx.drawImage(img, 0, 0, zoom * w, zoom * h);
                 }
             }
         }
