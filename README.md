@@ -11,6 +11,8 @@ https://ci.appveyor.com/project/michel-iwaniec/overlaypal
 
 A program to convert pixel images to NES constraints, by automatically assigning pixel image colors to background / sprite palettes.
 
+![Bernie](testimages/Bernie-converted.png) ![Bernie Converted BG](testimages/Bernie-converted_bg.png) ![Bernie Converted SPR](testimages/Bernie-converted_spr.png)
+
 ### Uhmm... why? Ain't a pixel drawing program enough to make NES pixel art?
 
 The NES was a quirky system in terms of graphics. Designed in an era where pixel memory was expensive, it provides only a single graphics mode.
@@ -54,6 +56,8 @@ Simply put a 192-byte .pal files (used by most NES emulators) in the "nespalette
 ### Converting an image
 
 Pressing "Convert" will convert the image using the CMPL optimisation solver. The right image will show a busy indicator, and eventually come back with a success or failure to convert. The "Generated Palettes" window will also show the background / sprite palettes of the output image.
+
+![OverlayPal screenshot](/screenshots/Bernie-screenshot.png)
 
 Successfully converted images can then be saved to a PNG file - optionally with different palette filters applied to separate background / overlay(s).
 
