@@ -54,6 +54,7 @@ for:
 
     install:
       - PATH=$HOME/Qt/5.15/gcc_64/bin:$PATH
+      - sh: sudo apt update
       - sh: sudo apt install -y libgl1-mesa-dev
     build_script:
       - qmake OverlayPal.pro "CONFIG+=qtquickcompiler"
