@@ -327,7 +327,23 @@ void OverlayPalGuiBackend::setTrackInputImage(bool trackInputImage)
 
 bool OverlayPalGuiBackend::potentialHardwarePaletteIndexedImage() const
 {
-    return (mInputImage.format() == QImage::Format_Indexed8) && (mInputImage.colorTable().size() < HardwarePaletteSize);
+    // Image must be indexed
+    if(mInputImage.format() != QImage::Format_Indexed8)
+        return false;
+    // ...and have no color indices above the hardware palette size
+    int w = mInputImage.width();
+    int h = mInputImage.height();
+    for(int y = 0; y < h; y++)
+    {
+        for(int x = 0; x < w; x++)
+        {
+            if(mInputImage.pixelIndex(x, y) >= HardwarePaletteSize)
+            {
+                return false;
+            }
+        }
+    }
+    return true;
 }
 
 //---------------------------------------------------------------------------------------------------------------------
