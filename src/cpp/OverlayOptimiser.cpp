@@ -566,7 +566,8 @@ void OverlayOptimiser::convert(const Image2D& image,
     assert(!imageOverlay.empty(mBackgroundColor));
     mOutputImage = image;
     mOutputImageBackground = imageBackground;
-    mOutputImageOverlay = imageOverlayGrid;
+    mOutputImageOverlay = imageOverlay;
+    mOutputImageOverlayGrid = imageOverlayGrid;
     mOutputImageOverlayFree = imageOverlayFree;
     assert(!mOutputImage.empty(mBackgroundColor));
     assert(!mOutputImageBackground.empty(mBackgroundColor));
@@ -593,12 +594,38 @@ Image2D OverlayOptimiser::outputImageBackground() const
 
 //---------------------------------------------------------------------------------------------------------------------
 
-Image2D OverlayOptimiser::outputImageOverlay() const
+Image2D OverlayOptimiser::outputImageOverlayGrid() const
 {
     assert(!mOutputImage.empty(mBackgroundColor));
     assert(!mOutputImageBackground.empty(mBackgroundColor));
-    assert(!mOutputImageOverlay.empty(mBackgroundColor));
-    return remapColors(mOutputImageOverlay, mLayerOverlay, mPalettes, mPaletteIndicesOverlay);
+    assert(!mOutputImageOverlayGrid.empty(mBackgroundColor));
+    return remapColors(mOutputImageOverlayGrid, mLayerOverlay, mPalettes, mPaletteIndicesOverlay);
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+
+Image2D OverlayOptimiser::outputImageOverlayFree() const
+{
+    const size_t spriteWidth = mLayerOverlay.cellWidth();
+    const size_t spriteHeight = mLayerOverlay.cellHeight();
+    auto sprites = spritesOverlayFree();
+    // Write sprites to new image
+    Image2D outputImage(mOutputImageOverlayFree.width(), mOutputImageOverlayFree.height());
+    for(auto const& s : sprites)
+    {
+        for(size_t y = 0; y < spriteHeight; y++)
+        {
+            for(size_t x = 0; x < spriteWidth; x++)
+            {
+                uint8_t c = s.pixels(x, y);
+                if(c != mBackgroundColor)
+                {
+                    outputImage(s.x + x, s.y + y) = (s.p << 2) | indexInPalette(mPalettes[s.p], c);
+                }
+            }
+        }
+    }
+    return outputImage;
 }
 
 //---------------------------------------------------------------------------------------------------------------------
@@ -607,12 +634,14 @@ Image2D OverlayOptimiser::outputImage() const
 {
     assert(!mOutputImage.empty(mBackgroundColor));
     assert(!mOutputImageBackground.empty(mBackgroundColor));
-    assert(!mOutputImageOverlay.empty(mBackgroundColor));
+    assert(!mOutputImageOverlayGrid.empty(mBackgroundColor));
     Image2D background = outputImageBackground();
-    Image2D overlay = outputImageOverlay();
+    Image2D overlayGrid = outputImageOverlayGrid();
+    Image2D overlayFree = outputImageOverlayFree();
     assert(!background.empty());
-    assert(!overlay.empty());
-    assert(background.width() == overlay.width() && background.height() == overlay.height());
+    assert(!overlayGrid.empty());
+    assert(background.width() == overlayGrid.width() && background.height() == overlayGrid.height());
+    assert(background.width() == overlayFree.width() && background.height() == overlayFree.height());
     size_t w = background.width();
     size_t h = background.height();
     Image2D image(w, h);
@@ -621,11 +650,16 @@ Image2D OverlayOptimiser::outputImage() const
         for(size_t x = 0; x < w; x++)
         {
             uint8_t cB = background(x, y);
-            uint8_t cO = overlay(x, y);
-            assert(!((cB != 0) && (cO != 0)));
-            if(cO != 0)
+            uint8_t cOG = overlayGrid(x, y);
+            uint8_t cOF = overlayFree(x, y);
+            assert(!((cB != 0) && (cOG != 0) && (cOF != 0)));
+            if(cOF != 0)
             {
-                image(x, y) = cO;
+                image(x, y) = cOF;
+            }
+            else if(cOG != 0)
+            {
+                image(x, y) = cOG;
             }
             else if(cB != 0)
             {
@@ -700,7 +734,75 @@ const std::vector<std::set<uint8_t>> &OverlayOptimiser::palettes() const
 
 //---------------------------------------------------------------------------------------------------------------------
 
-std::vector<OverlayOptimiser::Sprite> OverlayOptimiser::spritesOverlay() const
+OverlayOptimiser::Sprite OverlayOptimiser::extractSprite(Image2D& image,
+                                                         size_t xPos,
+                                                         size_t yPos,
+                                                         size_t spriteWidth,
+                                                         size_t spriteHeight,
+                                                         const std::set<uint8_t>& colors,
+                                                         bool removePixels) const
+{
+    OverlayOptimiser::Sprite s;
+    s.pixels = Image2D(spriteWidth, spriteHeight);
+    s.x = xPos;
+    s.y = yPos;
+    for(size_t y = 0; y < spriteHeight; y++)
+    {
+        for(size_t x = 0; x < spriteWidth; x++)
+        {
+            uint8_t c = image(xPos + x, yPos + y);
+            bool insideImage = xPos + x < image.width() && yPos + y < image.height();
+            if(colors.count(c) > 0 && insideImage)
+            {
+                s.pixels(x, y) = c;
+                s.colors.insert(c);
+                if(removePixels)
+                {
+                    image(xPos + x, yPos + y) = mBackgroundColor;
+                }
+            }
+            else
+            {
+                s.pixels(x, y) = mBackgroundColor;
+            }
+        }
+    }
+    return s;
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+
+OverlayOptimiser::Sprite OverlayOptimiser::extractSpriteWithBestPalette(Image2D& overlayImage,
+                                                                        size_t x,
+                                                                        size_t y,
+                                                                        size_t spriteWidth,
+                                                                        size_t spriteHeight,
+                                                                        bool removePixels) const
+{
+    // Try extracting sprites for each palette, and keep track of best one (the one extracting most colors)
+    size_t bestIndex = 0;
+    size_t bestMaxColors = 0;
+    for(size_t i = NumBackgroundPalettes; i < NumBackgroundPalettes + NumSpritePalettes; i++)
+    {
+        OverlayOptimiser::Sprite s = extractSprite(overlayImage,
+                                                   x,
+                                                   y,
+                                                   spriteWidth,
+                                                   spriteHeight,
+                                                   mPalettes[i],
+                                                   false);
+        if(s.colors.size() > bestMaxColors)
+            bestIndex = i;
+    }
+    // Do final extraction with (potential) pixel removal
+    OverlayOptimiser::Sprite s = extractSprite(overlayImage, x, y, spriteWidth, spriteHeight, mPalettes[bestIndex], removePixels);
+    s.p = bestIndex;
+    return s;
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+
+std::vector<OverlayOptimiser::Sprite> OverlayOptimiser::spritesOverlayGrid() const
 {
     const GridLayer& layer = mLayerOverlay;
     const Array2D<uint8_t>& paletteIndicesOverlay = mPaletteIndicesOverlay;
@@ -721,4 +823,80 @@ std::vector<OverlayOptimiser::Sprite> OverlayOptimiser::spritesOverlay() const
         }
     }
     return sprites;
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+
+std::vector<OverlayOptimiser::Sprite> OverlayOptimiser::spritesOverlayFree() const
+{
+    const size_t spriteWidth = mLayerOverlay.cellWidth();
+    const size_t spriteHeight = mLayerOverlay.cellHeight();
+    Image2D overlayImage = mOutputImageOverlayFree;
+    std::vector<OverlayOptimiser::Sprite> sprites;
+    size_t y = 0;
+    while(y < overlayImage.height())
+    {
+        // Find first non-empty line
+        while(y < overlayImage.height() && overlayImage.emptyRow(y, mBackgroundColor))
+            y++;
+        // Start extracting sprites from this line
+        for(size_t x = 0; x < overlayImage.width();)
+        {
+            bool columnHasPixels = false;
+            for(size_t i = y; i < y + spriteHeight; i++)
+            {
+                if(i < overlayImage.height() && overlayImage(x, i) != mBackgroundColor)
+                {
+                    columnHasPixels = true;
+                    break;
+                }
+            }
+            if(columnHasPixels)
+            {
+                // Extract pixels into sprite at (x, y)
+                OverlayOptimiser::Sprite s = extractSpriteWithBestPalette(overlayImage, x, y, spriteWidth, spriteHeight, true);
+                if(s.colors.size() > 0)
+                {
+                    sprites.push_back(s);
+                }
+                else
+                {
+                    // No more sprites can be extracted - move along
+                    x++;
+                }
+            }
+            else
+            {
+                // Empty column - move along
+                x++;
+            }
+        }
+        // Advance a full sprite height at right end, as all pixels should now have been extracted into sprites
+        y += spriteHeight;
+    }
+    return sprites;
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+
+std::vector<OverlayOptimiser::Sprite> OverlayOptimiser::spritesOverlay() const
+{
+    std::vector<OverlayOptimiser::Sprite> sprites = spritesOverlayGrid();
+    std::vector<OverlayOptimiser::Sprite> spritesFree = spritesOverlayFree();
+    sprites.insert( sprites.end(), spritesFree.begin(), spritesFree.end() );
+    return sprites;
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+
+uint8_t OverlayOptimiser::indexInPalette(const std::set<uint8_t>& palette, uint8_t color)
+{
+    uint8_t i = 1;
+    for(uint8_t c : palette)
+    {
+        if(c == color)
+            return i;
+        i++;
+    }
+    return 0;
 }
