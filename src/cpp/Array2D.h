@@ -38,7 +38,7 @@ public:
     {
     }
 
-    Array2D(int width, int height):
+    Array2D(int width, int height, T initValue = T()):
         mWidth(width),
         mHeight(height),
         mData(nullptr)
@@ -50,7 +50,7 @@ public:
             {
                 for(size_t x = 0; x < mWidth; x++)
                 {
-                    (*this)(x, y) = T();
+                    (*this)(x, y) = initValue;
                 }
             }
         }

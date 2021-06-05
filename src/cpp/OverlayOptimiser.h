@@ -55,13 +55,13 @@ public:
     std::string exePathFilename(const std::string& exeFilename) const;
     std::string workPathFilename(const std::string& workFilename) const;
 
-    void convert(const Image2D& image,
-                 uint8_t backgroundColor,
-                 int gridCellColorLimit,
-                 int maxBackgroundPalettes,
-                 int maxSpritePalettes,
-                 int maxSpritesPerScanline,
-                 int timeOut);
+    std::string convert(const Image2D& image,
+                        uint8_t backgroundColor,
+                        int gridCellColorLimit,
+                        int maxBackgroundPalettes,
+                        int maxSpritePalettes,
+                        int maxSpritesPerScanline,
+                        int timeOut);
 
     bool conversionSuccessful() const;
 
@@ -91,6 +91,8 @@ public:
     std::vector<OverlayOptimiser::Sprite> spritesOverlayGrid() const;
     std::vector<OverlayOptimiser::Sprite> spritesOverlayFree() const;
     std::vector<OverlayOptimiser::Sprite> spritesOverlay() const;
+
+    int getMaxSpritesPerScanline(const std::vector<OverlayOptimiser::Sprite>& sprites) const;
 
     static uint8_t indexInPalette(const std::set<uint8_t>& palette, uint8_t color);
 
