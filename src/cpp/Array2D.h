@@ -134,16 +134,15 @@ public:
         return mData[mWidth * y + x];
     }
 
-    bool empty(uint8_t emptyColor = 0) const
+    bool empty(T emptyValue = T()) const
     {
         if(mWidth > 0 && mHeight > 0)
         {
             for(size_t y = 0; y < mHeight; y++)
             {
-                for(size_t x = 0; x < mWidth; x++)
+                if(!emptyRow(y, emptyValue))
                 {
-                    if((*this)(x, y) != emptyColor)
-                        return false;
+                    return false;
                 }
             }
             return true;
@@ -154,13 +153,22 @@ public:
         }
     }
 
+    bool emptyRow(size_t y, T emptyValue = T()) const
+    {
+        for(size_t x = 0; x < mWidth; x++)
+        {
+            if((*this)(x, y) != emptyValue)
+                return false;
+        }
+        return true;
+    }
+
 protected:
 
     void initialiseFromOther(const Array2D& other)
     {
         assert(mWidth == other.width());
         assert(mHeight == other.height());
-        assert(other.mData != nullptr);
         for(int y = 0; y < mHeight; y++)
         {
             for(int x = 0; x < mWidth; x++)

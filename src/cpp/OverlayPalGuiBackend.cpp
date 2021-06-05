@@ -538,11 +538,6 @@ void OverlayPalGuiBackend::startImageConversion()
             Image2D remappedImage = mOverlayOptimiser.outputImage();
             mOutputImage = image2DToQImage(remappedImage, colorTable);
             //
-            Image2D remappedImageOverlay = mOverlayOptimiser.outputImageOverlay();
-            mOutputImageOverlay = image2DToQImage(remappedImageOverlay, colorTable);
-            //
-            Image2D remappedImageBackground = mOverlayOptimiser.outputImageBackground();
-            QImage outputImageBackground = image2DToQImage(remappedImage, colorTable);
             const std::vector<std::set<uint8_t>>& palettes = mOverlayOptimiser.palettes();
             mPaletteModel.setPalette(palettes, mBackgroundColor);
             mConversionError = "";
@@ -937,20 +932,6 @@ QVariantList OverlayPalGuiBackend::debugDestinationColorsBackground() const
 
 //---------------------------------------------------------------------------------------------------------------------
 
-uint8_t OverlayPalGuiBackend::indexInPalette(const std::set<uint8_t>& palette, uint8_t color)
-{
-    uint8_t i = 1;
-    for(uint8_t c : palette)
-    {
-        if(c == color)
-            return i;
-        i++;
-    }
-    return 0;
-}
-
-//---------------------------------------------------------------------------------------------------------------------
-
 QString OverlayPalGuiBackend::urlToLocal(const QString &url)
 {
     return QUrl(url).toLocalFile();
@@ -977,8 +958,8 @@ QVariantList OverlayPalGuiBackend::debugSpritesOverlay() const
         for(uint8_t c : s.colors)
         {
             srcColors.push_back(c);
-            uint8_t dstColor = indexInPalette(palettes[s.p], c);
-            dstColors.push_back(dstColor | 0x10);
+            uint8_t dstColor = mOverlayOptimiser.indexInPalette(palettes[s.p], c);
+            dstColors.push_back((s.p << 2) | dstColor);
             i++;
         }
         m["srcColors"] = colorsToQString(srcColors, 1);

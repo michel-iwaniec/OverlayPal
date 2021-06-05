@@ -44,6 +44,7 @@ public:
         int y;
         int p;
         std::set<uint8_t> colors;
+        Image2D pixels;
     };
 
     OverlayOptimiser();
@@ -66,7 +67,9 @@ public:
 
     Image2D outputImageBackground() const;
 
-    Image2D outputImageOverlay() const;
+    Image2D outputImageOverlayGrid() const;
+
+    Image2D outputImageOverlayFree() const;
 
     Image2D outputImage() const;
 
@@ -85,7 +88,11 @@ public:
 
     const GridLayer& layerOverlay() const;
 
+    std::vector<OverlayOptimiser::Sprite> spritesOverlayGrid() const;
+    std::vector<OverlayOptimiser::Sprite> spritesOverlayFree() const;
     std::vector<OverlayOptimiser::Sprite> spritesOverlay() const;
+
+    static uint8_t indexInPalette(const std::set<uint8_t>& palette, uint8_t color);
 
 protected:
 
@@ -136,6 +143,8 @@ protected:
 
     void fillMissingPaletteGroups(std::vector<std::set<uint8_t>>& palettes);
 
+    OverlayOptimiser::Sprite extractSprite(Image2D& overlayImage, size_t x, size_t y, size_t spriteWidth, size_t spriteHeight, const std::set<uint8_t>& colors, bool removePixels) const;
+    OverlayOptimiser::Sprite extractSpriteWithBestPalette(Image2D& overlayImage, size_t x, size_t y, size_t spriteWidth, size_t spriteHeight, bool removePixels) const;
 private:
     std::string mExecutablePath;
     std::string mWorkPath;
@@ -144,6 +153,7 @@ private:
     Image2D mOutputImage;
     Image2D mOutputImageBackground;
     Image2D mOutputImageOverlay;
+    Image2D mOutputImageOverlayGrid;
     Image2D mOutputImageOverlayFree;
     std::vector<std::set<uint8_t>> mPalettes;
     std::unordered_map<uint8_t, uint8_t> mRemappingForward;
@@ -156,6 +166,8 @@ private:
     const int GridCellWidth = 16;
     const int GridCellHeight = 16;
     const size_t PaletteGroupSize = 4;
+    const size_t NumBackgroundPalettes = 4;
+    const size_t NumSpritePalettes = 4;
     const char* firstPassProgramInputFilename = "FirstPass.cmpl";
     const char* firstPassProgramOutputFilename = "FirstPass_withTimeOut.cmpl";
     const char* firstPassSolutionFilename = "firstpass_output.csv";
