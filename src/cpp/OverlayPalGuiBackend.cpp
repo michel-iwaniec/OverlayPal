@@ -526,13 +526,13 @@ void OverlayPalGuiBackend::startImageConversion()
     QFuture<void> future = QtConcurrent::run([=]()
     {
         try {
-            mOverlayOptimiser.convert(mImagePendingConversion,
-                                      mBackgroundColor,
-                                      GridCellColorLimit,
-                                      mMaxBackgroundPalettes,
-                                      mMaxSpritePalettes,
-                                      mMaxSpritesPerScanline,
-                                      mTimeOut);
+            std::string conversionError = mOverlayOptimiser.convert(mImagePendingConversion,
+                                                                    mBackgroundColor,
+                                                                    GridCellColorLimit,
+                                                                    mMaxBackgroundPalettes,
+                                                                    mMaxSpritePalettes,
+                                                                    mMaxSpritesPerScanline,
+                                                                    mTimeOut);
             // successful
             QVector<QRgb> colorTable = makeColorTable();
             Image2D remappedImage = mOverlayOptimiser.outputImage();
@@ -540,12 +540,19 @@ void OverlayPalGuiBackend::startImageConversion()
             //
             const std::vector<std::set<uint8_t>>& palettes = mOverlayOptimiser.palettes();
             mPaletteModel.setPalette(palettes, mBackgroundColor);
-            mConversionError = "";
+            mConversionError = QString(conversionError.c_str());
             emit outputImageChanged();
         }
         catch (const std::runtime_error& error)
         {
             mConversionError = error.what();
+            // Make dummy image
+            QVector<QRgb> colorTable;
+            colorTable.append(0x00000000);
+            mOutputImage.fill(0);
+            mOutputImage.setColorTable(colorTable);
+            mOutputImageOverlay.fill(0);
+            mOutputImageOverlay.setColorTable(colorTable);
             emit outputImageChanged();
         }
         mConversionInProgress = false;

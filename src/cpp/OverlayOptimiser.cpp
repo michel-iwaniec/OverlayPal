@@ -479,13 +479,13 @@ bool OverlayOptimiser::convertSecondPass(int gridCellColorLimit,
 
 //---------------------------------------------------------------------------------------------------------------------
 
-void OverlayOptimiser::convert(const Image2D& image,
-                               uint8_t backgroundColor,
-                               int gridCellColorLimit,
-                               int maxBackgroundPalettes,
-                               int maxSpritePalettes,
-                               int maxSpritesPerScanline,
-                               int timeOut)
+std::string OverlayOptimiser::convert(const Image2D& image,
+                                      uint8_t backgroundColor,
+                                      int gridCellColorLimit,
+                                      int maxBackgroundPalettes,
+                                      int maxSpritePalettes,
+                                      int maxSpritesPerScanline,
+                                      int timeOut)
 {
     // Remove old files
     std::array<const char*, 6> filenames = {
@@ -500,14 +500,37 @@ void OverlayOptimiser::convert(const Image2D& image,
     {
         remove(workPathFilename(filename).c_str());
     }
-    // +1 to give some extra leeway due to using a 16x16 grid in first pass
-    int maxRowSize = (maxSpritesPerScanline * SpriteWidth / GridCellWidth) + 1;
-    // Execute first pass
+    mBackgroundColor = backgroundColor;
+    // Halve GridCellWidth for sprite layer after first pass
+    int OverlayGridCellWidth = GridCellWidth / 2;
+    int OverlayWidth = image.width() / OverlayGridCellWidth; //layer.width() * 2;
+    Image2D imageBackground(image.width(), image.height());
+    Image2D imageOverlay(image.width(), image.height());
+    Image2D imageOverlayGrid(image.width(), image.height());
+    Image2D imageOverlayFree(image.width(), image.height());
     GridLayer layer(backgroundColor, GridCellWidth, GridCellHeight, image);
     GridLayer layerBackground(backgroundColor, layer.cellWidth(), layer.cellHeight(), layer.width(), layer.height());
     GridLayer layerOverlay(backgroundColor, layer.cellWidth(), layer.cellHeight(), layer.width(), layer.height());
-    std::vector<std::set<uint8_t>> palettes;
+    GridLayer layerOverlayGrid(backgroundColor, OverlayGridCellWidth, layer.cellHeight(), OverlayWidth, layer.height());
+    GridLayer layerOverlayFree(backgroundColor, OverlayGridCellWidth, layer.cellHeight(), OverlayWidth, layer.height());
     Array2D<uint8_t> paletteIndicesBackground(layer.width(), layer.height());
+    Array2D<uint8_t> paletteIndicesOverlay(OverlayWidth, layerOverlay.height());
+    // Initialise output data to blank values
+    const Image2D blankImage = Image2D(image.width(), image.height(), mBackgroundColor);
+    const GridLayer blankLayer = GridLayer(mBackgroundColor, OverlayGridCellWidth, layer.cellHeight(), OverlayWidth, layer.height());
+    mOutputImage = blankImage;
+    mOutputImageBackground = blankImage;
+    mOutputImageOverlay = blankImage;
+    mOutputImageOverlayGrid = blankImage;
+    mOutputImageOverlayFree = blankImage;
+    mLayerOverlay = blankLayer;
+    mLayerOverlayFree = blankLayer;
+    mPaletteIndicesBackground = paletteIndicesBackground;
+    mPaletteIndicesOverlay = paletteIndicesOverlay;
+    // * 2 to always get a visible solution, even if beyond constraints
+    int maxRowSize = maxSpritesPerScanline;
+    // Execute first pass
+    std::vector<std::set<uint8_t>> palettes;
     bool successPassOne = convertFirstPass(image,
                                            gridCellColorLimit,
                                            maxBackgroundPalettes,
@@ -520,30 +543,34 @@ void OverlayOptimiser::convert(const Image2D& image,
                                            palettes,
                                            paletteIndicesBackground);
     if(!successPassOne)
-        throw Error("First pass failed.");
-    // Split image
-    Image2D imageBackground(image.width(), image.height());
-    Image2D imageOverlay(image.width(), image.height());
+        return "First pass failed.";
+    // Split image into background and overlay
     moveOverlayColors(image, imageBackground, imageOverlay, layerOverlay, backgroundColor);
-
     assert(consistentLayers(imageBackground, layerBackground, palettes, paletteIndicesBackground, backgroundColor));
     assert(!image.empty(mBackgroundColor));
     assert(!imageBackground.empty(mBackgroundColor));
-    assert(!imageOverlay.empty(mBackgroundColor));
-
-    // Re-initialise for cached data - and halve GridCellWidth
-    int OverlayGridCellWidth = GridCellWidth / 2;
-    int OverlayWidth = layer.width() * 2;
+    mOutputImageBackground = imageBackground;
+    // if no colors were moved into overlay we are done
+    if(imageOverlay.empty(mBackgroundColor))
+    {
+        mOutputImage = image;
+        mLayerBackground = layerBackground;
+        mPaletteIndicesBackground = paletteIndicesBackground;
+        mPaletteIndicesOverlay = paletteIndicesOverlay;
+        for(size_t i = 0; i < NumSpritePalettes; i++)
+        {
+            std::set<uint8_t> palette;
+            palettes.push_back(palette);
+        }
+        mPalettes = palettes;
+        return "";
+    }
+    // Re-initialise overlay layer with /2 width
     layerOverlay = GridLayer(backgroundColor, OverlayGridCellWidth, GridCellHeight, imageOverlay);
-    Array2D<uint8_t> paletteIndicesOverlay(OverlayWidth, layerOverlay.height());
     // Second pass
-    Image2D imageOverlayGrid(image.width(), image.height());
-    Image2D imageOverlayFree(image.width(), image.height());
-    GridLayer layerOverlayGrid(backgroundColor, OverlayGridCellWidth, layer.cellHeight(), OverlayWidth, layer.height());
-    GridLayer layerOverlayFree(backgroundColor, OverlayGridCellWidth, layer.cellHeight(), OverlayWidth, layer.height());
     bool successPassTwo = convertSecondPass(gridCellColorLimit,
                                             maxSpritePalettes,
-                                            maxSpritesPerScanline,
+                                            2 * maxSpritesPerScanline,
                                             timeOut,
                                             layerOverlay,
                                             layerOverlayGrid,
@@ -560,19 +587,20 @@ void OverlayOptimiser::convert(const Image2D& image,
     mLayerOverlayFree = layerOverlayFree;
     mPaletteIndicesBackground = paletteIndicesBackground;
     mPaletteIndicesOverlay = paletteIndicesOverlay;
-    mBackgroundColor = backgroundColor;
     assert(!image.empty(mBackgroundColor));
     assert(!imageBackground.empty(mBackgroundColor));
     assert(!imageOverlay.empty(mBackgroundColor));
     mOutputImage = image;
-    mOutputImageBackground = imageBackground;
-    mOutputImageOverlay = imageOverlay;
     mOutputImageOverlayGrid = imageOverlayGrid;
     mOutputImageOverlayFree = imageOverlayFree;
     assert(!mOutputImage.empty(mBackgroundColor));
     assert(!mOutputImageBackground.empty(mBackgroundColor));
-    assert(!mOutputImageOverlay.empty(mBackgroundColor));
     mPalettes = palettes;
+    // Finally, return error if maxSpritesPerScanline boundary not met
+    if(getMaxSpritesPerScanline(spritesOverlay()) > maxSpritesPerScanline)
+        return "Too many sprites / scanline";
+    else
+        return "";
 }
 
 //---------------------------------------------------------------------------------------------------------------------
@@ -588,7 +616,6 @@ Image2D OverlayOptimiser::outputImageBackground() const
 {
     assert(!mOutputImage.empty(mBackgroundColor));
     assert(!mOutputImageBackground.empty(mBackgroundColor));
-    assert(!mOutputImageOverlay.empty(mBackgroundColor));
     return remapColors(mOutputImageBackground, mLayerBackground, mPalettes, mPaletteIndicesBackground);
 }
 
@@ -885,6 +912,27 @@ std::vector<OverlayOptimiser::Sprite> OverlayOptimiser::spritesOverlay() const
     std::vector<OverlayOptimiser::Sprite> spritesFree = spritesOverlayFree();
     sprites.insert( sprites.end(), spritesFree.begin(), spritesFree.end() );
     return sprites;
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+
+int OverlayOptimiser::getMaxSpritesPerScanline(const std::vector<OverlayOptimiser::Sprite>& sprites) const
+{
+    std::vector<int> numSpritesPerScanline;
+    const Image2D image = outputImage();
+    const size_t spriteHeight = mLayerOverlay.cellHeight();
+    numSpritesPerScanline.resize(image.height(), 0);
+    for(auto const& s : sprites)
+    {
+        for(size_t y = s.y; y < s.y + spriteHeight; y++)
+        {
+            if( y < image.height())
+            {
+                numSpritesPerScanline[y] += 1;
+            }
+        }
+    }
+    return *std::max_element(numSpritesPerScanline.begin(), numSpritesPerScanline.end());
 }
 
 //---------------------------------------------------------------------------------------------------------------------
