@@ -24,4 +24,6 @@
 
 int executeProcess(std::string exeFilename, std::string params, int timeOut);
 
+std::string quoteStringOnWindows(const std::string& s);
+
 #endif // SUB_PROCESS_H

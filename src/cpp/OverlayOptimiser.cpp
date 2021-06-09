@@ -31,13 +31,6 @@
 
 //---------------------------------------------------------------------------------------------------------------------
 
-std::string quoteString(const std::string& s)
-{
-    return std::string("\"") + s + std::string("\"");
-}
-
-//---------------------------------------------------------------------------------------------------------------------
-
 OverlayOptimiser::OverlayOptimiser():
     mBackgroundColor(0)
 {
@@ -141,8 +134,8 @@ void OverlayOptimiser::runCmplProgram(const std::string& inputFilename,
     // Execute process
     std::string cmplExecutable("Cmpl/bin/cmpl");
     std::string params;
-    params += " -i " + quoteString(outputFilename);
-    params += " -solutionCsv " + quoteString(solutionCsvFilename);
+    params += " -i " + quoteStringOnWindows(outputFilename);
+    params += " -solutionCsv " + quoteStringOnWindows(solutionCsvFilename);
     int exitCode = executeProcess(exePathFilename(cmplExecutable), params, timeOut);
     if(exitCode != 0)
     {

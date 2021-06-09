@@ -32,6 +32,12 @@
 #include "SubProcess.h"
 
 #ifdef _WIN32
+
+std::string quoteStringOnWindows(const std::string& s)
+{
+    return std::string("\"") + s + std::string("\"");
+}
+
 int executeProcess(std::string exeFilename,
                    std::string params,
                    int timeOut)
@@ -80,6 +86,11 @@ int executeProcess(std::string exeFilename,
     }
 }
 #else
+
+std::string quoteStringOnWindows(const std::string& s)
+{
+    return s;
+}
 
 std::vector<char*> splitParams(std::string& params)
 {
