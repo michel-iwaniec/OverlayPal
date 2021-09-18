@@ -97,7 +97,9 @@ void OverlayOptimiser::writeCmplDataFile(const GridLayer& layer, int gridCellCol
     // Limits
     f << "%CELL_COLOR_LIMIT < " << gridCellColorLimit << " >\n";
     f << "%MAX_BG_PALETTES < " << maxBackgroundPalettes << " >\n";
+    f << "%BG_PALETTES set < 0.." << maxBackgroundPalettes-1 << " >\n";
     f << "%MAX_SPR_PALETTES < " << maxSpritePalettes << " >\n";
+    f << "%SPR_PALETTES set < 0.." << maxSpritePalettes-1 << " >\n";
     f << "%OVERLAY_ROW_SIZE_LIMIT < " << maxRowSize << " >\n";
     // X / Y ranges
     f << "%XRANGE set < 0.." << layer.width()-1 << " >\n";
@@ -136,7 +138,7 @@ void OverlayOptimiser::runCmplProgram(const std::string& inputFilename,
     std::string params;
     params += " -i " + quoteStringOnWindows(outputFilename);
     params += " -solutionCsv " + quoteStringOnWindows(solutionCsvFilename);
-    int exitCode = executeProcess(exePathFilename(cmplExecutable), params, timeOut);
+    int exitCode = executeProcess(exePathFilename(cmplExecutable), params, timeOut, mWorkPath);
     if(exitCode != 0)
     {
         throw Error("Non-zero exit code from CMPL");
@@ -204,7 +206,7 @@ bool OverlayOptimiser::parseCmplSolution(const std::string& csvFilename,
     const std::string usesPalettePrefix = secondPass ? "usesPaletteOverlay[" : "usesPaletteBG[";
     std::string line;
     std::getline(f, line);
-    if(line.find("CMPL csv export") == std::string::npos)
+    if(line.find("Problem;") == std::string::npos)
     {
         throw std::runtime_error(std::string("Solution file header unrecognized"));
     }

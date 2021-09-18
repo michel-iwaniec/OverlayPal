@@ -22,7 +22,7 @@
 
 #include <string>
 
-int executeProcess(std::string exeFilename, std::string params, int timeOut);
+int executeProcess(std::string exeFilename, std::string params, int timeOut, std::string startingDirectory);
 
 std::string quoteStringOnWindows(const std::string& s);
 

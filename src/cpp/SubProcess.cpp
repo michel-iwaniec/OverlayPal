@@ -40,7 +40,8 @@ std::string quoteStringOnWindows(const std::string& s)
 
 int executeProcess(std::string exeFilename,
                    std::string params,
-                   int timeOut)
+                   int timeOut,
+                   std::string startingDirectory)
 {
     // Create structures
     STARTUPINFO si;
@@ -54,14 +55,16 @@ int executeProcess(std::string exeFilename,
     exeFilenameW += std::wstring(exeSuffix.begin(), exeSuffix.end());
     std::wstring paramsW(params.begin(), params.end());
     // Attempt to execute
+    std::wstring startingDirectoryW(startingDirectory.begin(), startingDirectory.end());
+
     if( CreateProcessW( exeFilenameW.c_str(),
                         &paramsW[0],
-                        nullptr,    // Don't inherit process handle
-                        nullptr,    // Don't inherit thread handle
-                        0,          // Handle inheritance off
-                        0,          // Flags
-                        nullptr,    // Parent environment block
-                        nullptr,    // Parent starting directory
+                        nullptr,                    // Don't inherit process handle
+                        nullptr,                    // Don't inherit thread handle
+                        0,                          // Handle inheritance off
+                        0,                          // Flags
+                        nullptr,                    // Parent environment block
+                        startingDirectoryW.c_str(), // Parent starting directory
                         &si,
                         &pi ))
     {
@@ -113,7 +116,8 @@ std::vector<char*> splitParams(std::string& params)
 
 int executeProcess(std::string exeFilename,
                    std::string params,
-                   int timeOut)
+                   int timeOut,
+                   std::string startingDirectory)
 {
     // Split space-separated parameters into individual asciiz strings to create argv
     std::vector<char*> ptrs = splitParams(params);
