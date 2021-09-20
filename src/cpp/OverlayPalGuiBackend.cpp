@@ -93,7 +93,7 @@ OverlayPalGuiBackend::OverlayPalGuiBackend(QObject *parent):
     QObject::connect(&mInputFileWatcher, SIGNAL(fileChanged(QString)), this, SLOT(handleInputFileChanged(QString)));
     std::string executablePath = QCoreApplication::applicationDirPath().toStdString();
     mOverlayOptimiser.setExecutablePath(executablePath);
-    mOverlayOptimiser.setWorkPath(executablePath + "/" + "CmplWorkPath");
+    mOverlayOptimiser.setWorkPath(executablePath + "/" + "Cmpl/bin");
     loadHardwarePalettes(QString(executablePath.c_str()) + QString("/nespalettes"));
     // Prevent QML engine from taking ownership of and destroying models
     QQmlEngine::setObjectOwnership(&mPaletteModel, QQmlEngine::CppOwnership);

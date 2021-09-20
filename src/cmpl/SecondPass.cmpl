@@ -13,7 +13,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #
 
-%data secondpass_input.cdat : CELL_COLOR_LIMIT, MAX_SPR_PALETTES, OVERLAY_ROW_SIZE_LIMIT, XRANGE set, YRANGE set, COLORS set, layerColors[XRANGE, YRANGE, COLORS], layerColorColumnCount[XRANGE, YRANGE, COLORS]
+%data secondpass_input.cdat : CELL_COLOR_LIMIT, MAX_SPR_PALETTES, SPR_PALETTES set, OVERLAY_ROW_SIZE_LIMIT, XRANGE set, YRANGE set, COLORS set, layerColors[XRANGE, YRANGE, COLORS], layerColorColumnCount[XRANGE, YRANGE, COLORS]
 
 parameters:
     MAX_COLORS_OVERLAY  := MAX_SPR_PALETTES * CELL_COLOR_LIMIT;
@@ -30,9 +30,9 @@ variables:
     # overlay total is 1 whenever a particular color is anywhere in the overlay
     colorsOverlayTotal[COLORS] : binary;
     # Represents colors present in each palette
-    palettesOverlay[0..MAX_SPR_PALETTES-1, COLORS] : binary;
+    palettesOverlay[SPR_PALETTES, COLORS] : binary;
     # Represents whether colors in a cell are a subset of each palette
-    usesPaletteOverlay[XRANGE, YRANGE, 0..MAX_SPR_PALETTES-1] : binary;
+    usesPaletteOverlay[XRANGE, YRANGE, SPR_PALETTES] : binary;
 
 objectives:
     # Goal: Minimise free sprites
@@ -40,55 +40,45 @@ objectives:
 
 constraints:
     # Constraints ensuring that a BG cell can have no more colors than the cell color limit	 
-    { x in XRANGE, y in YRANGE:
-        cellColorLimit_$x$_$y$:
-            sum{ c in COLORS: colorsOverlayGrid[x, y, c] } <= CELL_COLOR_LIMIT;
+    `cellColorLimit_ { x in XRANGE, y in YRANGE:
+        sum{ c in COLORS: colorsOverlayGrid[x, y, c] } <= CELL_COLOR_LIMIT;
     }
 
     # Constraints ensuring that a color must be in one-and-only-one of grid-overlay or free-overlay
-    { x in XRANGE, y in YRANGE:
-        color_InEitherGridOrFreeOverlay_$x$_$y$_$2$:
-            colorsOverlayGrid[x, y, COLORS] + colorsOverlayFree[x, y, COLORS] = colorsOverlay[x, y, COLORS];
-        colorsOverlayEqualToLayerColors_$x$_$y$_$2$:
-            colorsOverlay[x, y, COLORS] = layerColors[x, y, COLORS];
+    `color_ { x in XRANGE, y in YRANGE:
+        `InEitherGridOrFreeOverlay_ colorsOverlayGrid[x, y, COLORS] + colorsOverlayFree[x, y, COLORS] = colorsOverlay[x, y, COLORS];
+        `OverlayEqualToLayerColors_ colorsOverlay[x, y, COLORS] = layerColors[x, y, COLORS];
     }
 
     # Constraints for occupancy (logical OR between all colors in colorsOverlayGrid, reformulated in LP)
-    { x in XRANGE, y in YRANGE:
-        occupancy_$x$_$y$:
-            occupancy[x, y] >= colorsOverlayGrid[x, y, COLORS];
-            occupancy[x, y] <= 1;
-            occupancy[x, y] <= sum{ c in COLORS: colorsOverlayGrid[x, y, c] };
+    `occupancy_ { x in XRANGE, y in YRANGE:
+        `_gtColorsOverlayGrid occupancy[x, y] >= colorsOverlayGrid[x, y, COLORS];
+        `_lt1 occupancy[x, y] <= 1;
+        `_ltSUM occupancy[x, y] <= sum{ c in COLORS: colorsOverlayGrid[x, y, c] };
     }
 
     # Constraints row size limit (approximates sprites / scanline limit)
-    { y in YRANGE:
-        rowLimit_$y$:
-            sum{ x in XRANGE: occupancy[x, y] } + sum{ x in XRANGE, c in COLORS: colorsOverlayFree[x, y, c] }  <= OVERLAY_ROW_SIZE_LIMIT;
+    `rowLimit_ { y in YRANGE:
+        sum{ x in XRANGE: occupancy[x, y] } + sum{ x in XRANGE, c in COLORS: colorsOverlayFree[x, y, c] }  <= OVERLAY_ROW_SIZE_LIMIT;
     }
 
     # Boolean constraint to get all free colors into a global
-    { c in COLORS:
+    `colorsOverlay_ { c in COLORS:
         { x in XRANGE, y in YRANGE:
-            colorsOverlayTotal_$x$_$y$_$c$:
-                colorsOverlayTotal[c] >= colorsOverlayFree[x, y, c];
+            `Total colorsOverlayTotal[c] >= colorsOverlayFree[x, y, c];
         }
-        colorsOverlayTotalClampToFree_$c$:
-            colorsOverlayTotal[c] <= sum{ x in XRANGE, y in YRANGE: colorsOverlayFree[x, y, c] };
-        colorsOverlayTotalClampToOne_$c$:
-            colorsOverlayTotal[c] <= 1;
+        `TotalClampToFree colorsOverlayTotal[c] <= sum{ x in XRANGE, y in YRANGE: colorsOverlayFree[x, y, c] };
+        `TotalClampToOne colorsOverlayTotal[c] <= 1;
     }
 
     # Ensure each individual free overlay color is present in at least one optimised overlay palette
-    { c in COLORS:
-        freeColorInAnyPalette_$c$_$2$:
-            sum{ p in 0..MAX_SPR_PALETTES-1: palettesOverlay[p, c] } >= colorsOverlayTotal[c];
+    `freeColorInAnyPalette_ { c in COLORS:
+        sum{ p in SPR_PALETTES: palettesOverlay[p, c] } >= colorsOverlayTotal[c];
     }
 
     # Constraint for palette color limit
-    { p in 0..MAX_SPR_PALETTES-1:
-        paletteColorLimit_$p$:
-            sum{ c in COLORS: palettesOverlay[p, c] } <= CELL_COLOR_LIMIT;
+    `paletteColorLimit_ { p in SPR_PALETTES:
+        sum{ c in COLORS: palettesOverlay[p, c] } <= CELL_COLOR_LIMIT;
     }
 
     # Constraint to ensure total overlay colors don't exceed overlay palette
@@ -96,14 +86,12 @@ constraints:
         sum{ c in COLORS: colorsOverlayTotal[c] } <= MAX_COLORS_OVERLAY;
 
     # Constraint for colors-subset-of-palette
-    { x in XRANGE, y in YRANGE, p in 0..MAX_SPR_PALETTES-1:
-        colorsOverlaymustBeSubsetOfPalette_$x$_$y$_$p$_$2$:
-            usesPaletteOverlay[x, y, p] * colorsOverlayGrid[x, y, COLORS] <= palettesOverlay[p, COLORS];
+    `colorsOverlaymustBeSubsetOfPalette_ { x in XRANGE, y in YRANGE, p in SPR_PALETTES:
+        usesPaletteOverlay[x, y, p] * colorsOverlayGrid[x, y, COLORS] <= palettesOverlay[p, COLORS];
     }
 
     # Constraint to ensure that every BG cell's set of colors are a subset of some palette's colors
-    { x in XRANGE, y in YRANGE:
-        cellColorsInPalette_$x$_$y$:
-            sum{ p in 0..MAX_SPR_PALETTES-1: usesPaletteOverlay[x, y, p] } = 1;
+    `cellColorsInPalette_ { x in XRANGE, y in YRANGE:
+        sum{ p in SPR_PALETTES: usesPaletteOverlay[x, y, p] } = 1;
     }
 

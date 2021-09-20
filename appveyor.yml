@@ -35,15 +35,14 @@ for:
       - copy ..\release\OverlayPal.exe
       - xcopy ..\nespalettes nespalettes\
       - copy ..\src\cmpl\*.cmpl .\
-      - mkdir CmplWorkPath
-      - echo "CMPL working path" > CmplWorkPath\README.md
-      - 7z x ..\thirdparty\cmplbin\Cmpl-1-11-0-win.zip
+      - appveyor DownloadFile http://www.coliop.org/_download/Cmpl-2-0-win.zip
+      - 7z x Cmpl-2-0-win.zip
+      - del Cmpl-2-0-win.zip
+      - rename Cmpl-2-0-win Cmpl
       - windeployqt.exe --qmldir ..\src\qml OverlayPal.exe
       - cd ..
-    artifacts:
-      - path: OverlayPal-dev-win64-%CONFIGURATION%
-        name: OverlayPal-dev-win64-%CONFIGURATION%
-        type: zip
+      - 7z a OverlayPal-dev-win64-%CONFIGURATION%.zip OverlayPal-dev-win64-%CONFIGURATION%
+      - appveyor PushArtifact OverlayPal-dev-win64-%CONFIGURATION%.zip
 
 # linux_x64
 
@@ -66,9 +65,10 @@ for:
       - cp ../OverlayPal ./
       - cp -r ../nespalettes ./
       - cp ../src/cmpl/*.cmpl ./
-      - mkdir CmplWorkPath
-      - echo "CMPL working path" > CmplWorkPath/README.md
-      - tar -xvf ../thirdparty/cmplbin/Cmpl-1-12-0-Linux64.tar.gz
+      - appveyor DownloadFile http://www.coliop.org/_download/Cmpl-2-0-linux64.tar.gz
+      - tar -xvf Cmpl-2-0-linux64.tar.gz
+      - rm Cmpl-2-0-linux64.tar.gz
+      - mv Cmpl-2-0-linux64 Cmpl
       - cd ..
       - tar -czvf OverlayPal-dev-linux_x64-${CONFIGURATION}.tar.gz OverlayPal-dev-linux_x64-${CONFIGURATION}
       - appveyor PushArtifact OverlayPal-dev-linux_x64-${CONFIGURATION}.tar.gz
