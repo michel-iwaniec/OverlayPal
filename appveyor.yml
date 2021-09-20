@@ -20,6 +20,8 @@ for:
     matrix:
       only:
         - job_name: win64
+    cache:
+    - Cmpl-2-0-win.zip
 
     install:
       - set QTDIR=C:\Qt\5.15\msvc2019_64
@@ -29,15 +31,14 @@ for:
       - qmake OverlayPal.pro -spec win32-msvc "CONFIG+=qtquickcompiler"
       - nmake
     after_build:
+      - if not exist Cmpl-2-0-win.zip appveyor DownloadFile http://www.coliop.org/_download/Cmpl-2-0-win.zip
       - mkdir OverlayPal-dev-win64-%CONFIGURATION%
       - cd OverlayPal-dev-win64-%CONFIGURATION%
       - copy ..\LICENSE .\
       - copy ..\release\OverlayPal.exe
       - xcopy ..\nespalettes nespalettes\
       - copy ..\src\cmpl\*.cmpl .\
-      - appveyor DownloadFile http://www.coliop.org/_download/Cmpl-2-0-win.zip
-      - 7z x Cmpl-2-0-win.zip
-      - del Cmpl-2-0-win.zip
+      - 7z x ..\Cmpl-2-0-win.zip
       - rename Cmpl-2-0-win Cmpl
       - windeployqt.exe --qmldir ..\src\qml OverlayPal.exe
       - cd ..
@@ -50,6 +51,8 @@ for:
     matrix:
       only:
         - job_name: linux_x64
+    cache:
+    - Cmpl-2-0-linux64.tar.gz
 
     install:
       - PATH=$HOME/Qt/5.15/gcc_64/bin:$PATH
@@ -59,15 +62,14 @@ for:
       - qmake OverlayPal.pro "CONFIG+=qtquickcompiler"
       - make
     after_build:
+      - if ! [ -f Cmpl-2-0-linux64.tar.gz ]; then appveyor DownloadFile http://www.coliop.org/_download/Cmpl-2-0-linux64.tar.gz; fi
       - mkdir OverlayPal-dev-linux_x64-${CONFIGURATION}
       - cd OverlayPal-dev-linux_x64-${CONFIGURATION}
       - cp ../LICENSE ./
       - cp ../OverlayPal ./
       - cp -r ../nespalettes ./
       - cp ../src/cmpl/*.cmpl ./
-      - appveyor DownloadFile http://www.coliop.org/_download/Cmpl-2-0-linux64.tar.gz
-      - tar -xvf Cmpl-2-0-linux64.tar.gz
-      - rm Cmpl-2-0-linux64.tar.gz
+      - tar -xvf ../Cmpl-2-0-linux64.tar.gz
       - mv Cmpl-2-0-linux64 Cmpl
       - cd ..
       - tar -czvf OverlayPal-dev-linux_x64-${CONFIGURATION}.tar.gz OverlayPal-dev-linux_x64-${CONFIGURATION}
