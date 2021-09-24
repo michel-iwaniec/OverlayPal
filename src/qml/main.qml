@@ -86,10 +86,10 @@ Window {
 
         onBackgroundColorChanged: {
             var bgColor = optimiser.backgroundColor;
-            var colors = optimiser.inputImageColors();
-            for(var i = 0; i < colors.length; i++)
+            var hardwareColorsModel = bgColorComboBox.model;
+            for(var i = 0; i < hardwareColorsModel.rowCount(); i++)
             {
-                if(parseInt(colors[i], 16) == bgColor)
+                if(parseInt(hardwareColorsModel.data(hardwareColorsModel.index(i, 0)), 16) == bgColor)
                 {
                     bgColorComboBox.currentIndex = i;
                 }
@@ -100,7 +100,6 @@ Window {
         onInputImageChanged: {
             var img = Qt.resolvedUrl(optimiser.inputImageData());
             srcImageCanvas.paletteGroupImages[0] = img;
-            bgColorComboBox.model = optimiser.inputImageColors();
             srcImageCanvas.inputImageUpdated();
             if(optimiser.potentialHardwarePaletteIndexedImage)
             {
@@ -345,6 +344,8 @@ Window {
 
                     ComboBox {
                         id: paletteFlavorComboBox
+                        currentIndex: -2
+                        displayText: "pal: " + model.data(model.index(currentIndex, 0))
                         textRole: "display"
                         Layout.fillWidth: true
                         rightPadding: 0
@@ -369,13 +370,47 @@ Window {
 
                     ComboBox {
                         id: bgColorComboBox
+                        currentIndex: -1
+                        displayText: model.data(model.index(currentIndex, 0), Qt.DisplayRole)
                         onCurrentIndexChanged: {
-                            var bgColor = parseInt(bgColorComboBox.model[bgColorComboBox.currentIndex], 16);
+                            var bgColor = parseInt(model.data(model.index(currentIndex, 0), Qt.DisplayRole), 16);
                             optimiser.backgroundColor = bgColor;
                         }
                         Layout.fillHeight: false
                         Layout.preferredHeight: 40
                         Layout.preferredWidth: 118
+
+                        contentItem: Text {
+                            text: bgColorComboBox.displayText
+                            color: bgColorComboBox.model.data(bgColorComboBox.model.index(bgColorComboBox.currentIndex, 0), Qt.ForegroundRole);
+                            font: bgColorComboBox.font
+                            verticalAlignment: Text.AlignVCenter
+                            horizontalAlignment: Text.AlignHCenter
+                            elide: Text.ElideRight
+                        }
+
+                        delegate: ItemDelegate {
+                            width: bgColorComboBox.width
+                            contentItem: Text {
+                                text: bgColorComboBox.model.data(bgColorComboBox.model.index(index, 0), Qt.DisplayRole);
+                                color: bgColorComboBox.model.data(bgColorComboBox.model.index(index, 0), Qt.ForegroundRole);
+                                font: bgColorComboBox.font
+                                elide: Text.ElideRight
+                                verticalAlignment: Text.AlignVCenter
+                                horizontalAlignment: Text.AlignHCenter
+                            }
+                            background: Rectangle {
+                                color: bgColorComboBox.model.data(bgColorComboBox.model.index(index, 0), Qt.BackgroundColorRole);
+                            }
+                        }
+
+                        background: Rectangle {
+                            color: bgColorComboBox.model.data(bgColorComboBox.model.index(bgColorComboBox.currentIndex, 0), Qt.BackgroundColorRole);
+                        }
+
+                        Component.onCompleted: {
+                            bgColorComboBox.model = optimiser.inputImageColorsModel();
+                        }
                     }
                 }
 

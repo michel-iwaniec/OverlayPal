@@ -20,6 +20,7 @@
 #include <QtConcurrent/QtConcurrentRun>
 #include <QQmlEngine>
 #include <QUrl>
+#include <QDebug>
 
 #include <iostream>
 #include <iomanip>
@@ -98,6 +99,7 @@ OverlayPalGuiBackend::OverlayPalGuiBackend(QObject *parent):
     // Prevent QML engine from taking ownership of and destroying models
     QQmlEngine::setObjectOwnership(&mPaletteModel, QQmlEngine::CppOwnership);
     QQmlEngine::setObjectOwnership(&mHardwarePaletteNamesModel, QQmlEngine::CppOwnership);
+    QQmlEngine::setObjectOwnership(&mInputImageHardwareColorsModel, QQmlEngine::CppOwnership);
 }
 
 //---------------------------------------------------------------------------------------------------------------------
@@ -166,6 +168,7 @@ void OverlayPalGuiBackend::loadHardwarePalettes(const QString& palettesPath)
     mHardwarePaletteNamesModel.setStringList(mHardwarePaletteNames);
     // Use first loaded palette
     mHardwarePaletteName = mHardwarePalettes.firstKey();
+    mInputImageHardwareColorsModel.setHardwarePalette(mHardwarePalettes[mHardwarePaletteName]);
 }
 
 //---------------------------------------------------------------------------------------------------------------------
@@ -274,6 +277,19 @@ void OverlayPalGuiBackend::quantizeInputImage()
     assert(mInputImageIndexed.width() > 0 && mInputImageIndexed.height() > 0);
     // detect background color from current / available colors
     uint8_t backgroundColor = detectBackgroundColor(mInputImageIndexed, mBackgroundColor);
+    //
+    mInputImageHardwareColorsModel.setHardwarePalette(mHardwarePalettes[mHardwarePaletteName]);
+    // Collect hardware palette values from input image
+    std::set<uint8_t> colors;
+    for(int y = 0; y < mInputImageIndexed.height(); y++)
+    {
+        for(int x = 0; x < mInputImageIndexed.width(); x++)
+        {
+            uint8_t c = mInputImageIndexed.pixelIndex(x, y);
+            colors.insert(c);
+        }
+    }
+    mInputImageHardwareColorsModel.setColors(colors);
     // crop image
     mInputImageIndexedBeforeShift = cropOrExtendImage(mInputImageIndexed, backgroundColor);
     // Shift image by current shift values
@@ -789,25 +805,9 @@ Q_INVOKABLE QVariantList OverlayPalGuiBackend::hardwarePaletteRGB() const
 
 //---------------------------------------------------------------------------------------------------------------------
 
-Q_INVOKABLE QVariantList OverlayPalGuiBackend::inputImageColors() const
+Q_INVOKABLE QObject* OverlayPalGuiBackend::inputImageColorsModel()
 {
-    // Collect hardware palette values from input image
-    std::set<uint8_t> colors;
-    for(int y = 0; y < mInputImageIndexed.height(); y++)
-    {
-        for(int x = 0; x < mInputImageIndexed.width(); x++)
-        {
-            uint8_t c = mInputImageIndexed.pixelIndex(x, y);
-            colors.insert(c);
-        }
-    }
-    // Convert to QVariantList
-    QVariantList colorsQVL;
-    for(uint8_t c : colors)
-    {
-        colorsQVL.append(QString("%1").arg(int(c), 2, 16, QChar('0')).toUpper());
-    }
-    return colorsQVL;
+    return &mInputImageHardwareColorsModel;
 }
 
 //---------------------------------------------------------------------------------------------------------------------
