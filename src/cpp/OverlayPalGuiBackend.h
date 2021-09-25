@@ -33,6 +33,7 @@
 #include "Array2D.h"
 #include "OverlayOptimiser.h"
 #include "SimplePaletteModel.h"
+#include "HardwareColorsModel.h"
 
 class OverlayPalGuiBackend : public QObject
 {
@@ -101,7 +102,7 @@ public:
 
     Q_INVOKABLE QVariantList hardwarePaletteRGB() const;
 
-    Q_INVOKABLE QVariantList inputImageColors() const;
+    Q_INVOKABLE QObject* inputImageColorsModel();
     Q_INVOKABLE QVariantList debugPaletteIndicesBackground() const;
     Q_INVOKABLE QVariantList debugNumSourceColorsBackground() const;
     Q_INVOKABLE QVariantList debugSourceColorsBackground() const;
@@ -186,6 +187,7 @@ private:
     QStringList mHardwarePaletteNames;
     QStringListModel mHardwarePaletteNamesModel;
     SimplePaletteModel mPaletteModel;
+    HardwareColorsModel mInputImageHardwareColorsModel;
 
     OverlayOptimiser mOverlayOptimiser;
     QFileSystemWatcher mInputFileWatcher;

@@ -19,6 +19,7 @@ DEFINES += QT_DEPRECATED_WARNINGS
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
+    src/cpp/HardwareColorsModel.cpp \
     src/cpp/main.cpp \
     src/cpp/GridLayer.cpp \
     src/cpp/ImageUtils.cpp \
@@ -43,6 +44,7 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 HEADERS += \
     src/cpp/GridLayer.h \
     src/cpp/Array2D.h \
+    src/cpp/HardwareColorsModel.h \
     src/cpp/ImageUtils.h \
     src/cpp/OverlayPalGuiBackend.h \
     src/cpp/OverlayOptimiser.h \
