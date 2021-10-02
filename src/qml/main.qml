@@ -119,6 +119,7 @@ Window {
             inputImageGroupBox.enabled = true;
             shiftGroupBox.enabled = true;
             optimisationSettingsGroupBox.enabled = true;
+            spriteModeComboBox.enabled = true;
             // Set groupbox title to either success message or error string
             if(optimiser.conversionSuccessful)
             {
@@ -153,6 +154,7 @@ Window {
             inputImageGroupBox.enabled = false;
             shiftGroupBox.enabled = false;
             optimisationSettingsGroupBox.enabled = false;
+            spriteModeComboBox.enabled = false;
             conversionBusy.running = true;
             dstImageGroupBox.title = "Conversion running...";
             optimiser.startImageConversion();
@@ -553,6 +555,40 @@ Window {
             }
 
             GroupBox {
+                id: sizesModeGroupBox
+                width: 160
+                height: 200
+                title: qsTr("Size mode")
+
+                GridLayout {
+                    x: 0
+                    y: 7
+                    rows: 1
+                    columns: 2
+
+                    Label {
+                        id: spriteModeLabel
+                        text: qsTr("SPR")
+                        font.pointSize: 10
+                    }
+
+                    ComboBox {
+                        id: spriteModeComboBox
+                        model: ["8x16", "8x8"]
+                        Layout.fillHeight: false
+                        Layout.preferredHeight: 40
+                        Layout.preferredWidth: 80
+                        onCurrentIndexChanged: {
+                            console.debug(model[currentIndex])
+                            optimiser.spriteHeight = (model[currentIndex] == "8x8" ? 8 : 16);
+                        }
+                        Component.onCompleted: {
+                        }
+                    }
+                }
+            }
+
+            GroupBox {
                 id: showHideColorsGroupBox
                 width: 225
                 height: 200
@@ -839,6 +875,7 @@ Window {
                                 // Disable manual conversion button
                                 convertImageButton.enabled = false
                                 // Connect signals to start automatically
+                                spriteModeComboBox.currentValueChanged.connect(optimiser.startImageConversionWrapper);
                                 xShiftSpinBox.valueModified.connect(optimiser.startImageConversionWrapper);
                                 yShiftSpinBox.valueModified.connect(optimiser.startImageConversionWrapper);
                                 maxBackgroundPalettesSpinBox.valueModified.connect(optimiser.startImageConversionWrapper);
@@ -853,6 +890,7 @@ Window {
                                 // Re-enable manual conversion button
                                 convertImageButton.enabled = true
                                 // Disconnect signals to stop starting automatically
+                                spriteModeComboBox.currentValueChanged.disconnect(optimiser.startImageConversionWrapper);
                                 xShiftSpinBox.valueModified.disconnect(optimiser.startImageConversionWrapper);
                                 yShiftSpinBox.valueModified.disconnect(optimiser.startImageConversionWrapper);
                                 maxBackgroundPalettesSpinBox.valueModified.disconnect(optimiser.startImageConversionWrapper);
