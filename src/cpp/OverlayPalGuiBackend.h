@@ -45,6 +45,7 @@ class OverlayPalGuiBackend : public QObject
     Q_PROPERTY(QString inputImageFilename READ inputImageFilename WRITE setInputImageFilename)
     Q_PROPERTY(int shiftX READ shiftX WRITE setShiftX NOTIFY shiftXChanged)
     Q_PROPERTY(int shiftY READ shiftY WRITE setShiftY NOTIFY shiftYChanged)
+    Q_PROPERTY(int spriteHeight READ spriteHeight WRITE setSpriteHeight)
     Q_PROPERTY(int maxBackgroundPalettes READ maxBackgroundPalettes WRITE setMaxBackgroundPalettes)
     Q_PROPERTY(int maxSpritePalettes READ maxSpritePalettes WRITE setMaxSpritePalettes)
     Q_PROPERTY(int maxSpritesPerScanline READ maxSpritesPerScanline WRITE setMaxSpritesPerScanline)
@@ -74,6 +75,8 @@ public:
     bool potentialHardwarePaletteIndexedImage() const;
     bool mapInputColors() const;
     void setMapInputColors(bool mapInputColors);
+    int spriteHeight() const;
+    void setSpriteHeight(int spriteHeight);
     int maxBackgroundPalettes() const;
     void setMaxBackgroundPalettes(int maxBackgroundPalettes);
     int maxSpritePalettes() const;
@@ -165,6 +168,7 @@ private:
     bool mTrackInputImage;
     int mShiftX;
     int mShiftY;
+    int mSpriteHeight;
     int mMaxBackgroundPalettes;
     int mMaxSpritePalettes;
     int mMaxSpritesPerScanline;

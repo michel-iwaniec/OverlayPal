@@ -271,32 +271,47 @@ Item {
 
     function drawDebugTextSpr(ctx, sprites, keyword, useRows)
     {
-        var qScale = useRows ? 0.5 : 1.0;
-        var gridCellWidth = 8;
-        var gridCellHeight = 16;
-        ctx.fillStyle = debugColor;
-        ctx.font = (zoom * gridCellWidth * qScale) + 'px sans-serif';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'bottom';
-        ctx.lineWidth = 1;
-        ctx.strokeStyle = debugColor;
+        var spriteWidth = 8;
         for(var i = 0; i < sprites.length; i++)
         {
             var s = sprites[i];
-            var x = s.x + 0.5 * gridCellWidth;
-            var y = s.y + qScale * gridCellHeight;
             ctx.rect(s.x * zoom + 0.5,
                      s.y * zoom + 0.5,
-                     gridCellWidth * zoom,
-                     gridCellHeight * zoom);
+                     s.w * zoom,
+                     s.h * zoom);
             ctx.stroke();
-            if(useRows)
+            ctx.fillStyle = debugColor;
+            var qScale;
+            if(useRows && (s.h == 16))
             {
-                drawDebugTextImplRows(ctx, x, y, gridCellHeight, s[keyword]);
+                qScale = useRows ? 0.5 : 1.0;
+            }
+            else if(s.h == 8)
+            {
+                qScale = useRows ? 0.4 : 1.0;
             }
             else
             {
-                drawDebugTextImpl(ctx, x, y, gridCellHeight, s[keyword], false, useRows);
+                qScale = useRows ? 0.5 : 1.0;
+            }
+            ctx.font = (zoom * spriteWidth * qScale) + 'px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'bottom';
+            ctx.lineWidth = 1;
+            ctx.strokeStyle = debugColor;
+            var x = s.x + 0.5 * s.w;
+            var y = s.y + qScale * s.h;
+            if(useRows && (s.h == 8))
+            {
+                drawDebugTextImpl(ctx, x, y + 0.1 * s.h, s.h, s[keyword], true);
+            }
+            else if(useRows)
+            {
+                drawDebugTextImplRows(ctx, x, y, s.h, s[keyword]);
+            }
+            else
+            {
+                drawDebugTextImpl(ctx, x, y, s.h, s[keyword], false, useRows);
             }
         }
     }

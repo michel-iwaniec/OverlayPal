@@ -432,6 +432,20 @@ void OverlayPalGuiBackend::setShiftY(const int &shiftY)
 
 //---------------------------------------------------------------------------------------------------------------------
 
+int OverlayPalGuiBackend::spriteHeight() const
+{
+    return mSpriteHeight;
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+
+void OverlayPalGuiBackend::setSpriteHeight(int spriteHeight)
+{
+    mSpriteHeight = spriteHeight;
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+
 int OverlayPalGuiBackend::maxBackgroundPalettes() const
 {
     return mMaxBackgroundPalettes;
@@ -544,6 +558,7 @@ void OverlayPalGuiBackend::startImageConversion()
         try {
             std::string conversionError = mOverlayOptimiser.convert(mImagePendingConversion,
                                                                     mBackgroundColor,
+                                                                    mSpriteHeight,
                                                                     GridCellColorLimit,
                                                                     mMaxBackgroundPalettes,
                                                                     mMaxSpritePalettes,
@@ -959,6 +974,9 @@ QVariantList OverlayPalGuiBackend::debugSpritesOverlay() const
         // Make palette start at 0 to match "SPR0" designation
         m["p"] = s.p - 4;
         m["numColors"] = int(s.colors.size());
+        // Get current sprite width / height from optimiser
+        m["w"] = mOverlayOptimiser.spriteWidth();
+        m["h"] = mOverlayOptimiser.spriteHeight();
         std::vector<uint8_t> srcColors;
         std::vector<uint8_t> dstColors;
         uint8_t i = 1;
@@ -969,8 +987,9 @@ QVariantList OverlayPalGuiBackend::debugSpritesOverlay() const
             dstColors.push_back((s.p << 2) | dstColor);
             i++;
         }
-        m["srcColors"] = colorsToQString(srcColors, 1);
-        m["dstColors"] = colorsToQString(dstColors, 1);
+        int valuesPerLine = (mOverlayOptimiser.spriteHeight() == 8) ? 2 : 1;
+        m["srcColors"] = colorsToQString(srcColors, valuesPerLine);
+        m["dstColors"] = colorsToQString(dstColors, valuesPerLine);
         spritesQML.push_back(m);
     }
     return spritesQML;
