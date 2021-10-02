@@ -836,17 +836,22 @@ std::vector<OverlayOptimiser::Sprite> OverlayOptimiser::spritesOverlayGrid() con
     const GridLayer& layer = mLayerOverlay;
     const Array2D<uint8_t>& paletteIndicesOverlay = mPaletteIndicesOverlay;
     std::vector<Sprite> sprites;
+    Image2D overlayImage = mOutputImageOverlayGrid;
     for(size_t y = 0; y < layer.height(); y++)
     {
         for(size_t x = 0; x < layer.width(); x++)
         {
             if(layer(x, y).colors.size() > 0)
             {
-                OverlayOptimiser::Sprite s;
-                s.x = x * layer.cellWidth();
-                s.y = y * layer.cellHeight();
-                s.p = paletteIndicesOverlay(x, y);
-                s.colors = layer(x, y).colors;
+                uint8_t p = paletteIndicesOverlay(x, y);
+                OverlayOptimiser::Sprite s = extractSprite(overlayImage,
+                                                           x * layer.cellWidth(),
+                                                           y * layer.cellHeight(),
+                                                           SpriteWidth,
+                                                           SpriteHeight,
+                                                           mPalettes[p],
+                                                           false);
+                s.p = p;
                 sprites.push_back(s);
             }
         }
@@ -913,7 +918,99 @@ std::vector<OverlayOptimiser::Sprite> OverlayOptimiser::spritesOverlay() const
     std::vector<OverlayOptimiser::Sprite> sprites = spritesOverlayGrid();
     std::vector<OverlayOptimiser::Sprite> spritesFree = spritesOverlayFree();
     sprites.insert( sprites.end(), spritesFree.begin(), spritesFree.end() );
-    return sprites;
+    return optimizeHorizontallyAdjacentSprites(sprites);
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+
+int OverlayOptimiser::getNumBlankPixelsLeft(OverlayOptimiser::Sprite sprite) const
+{
+    assert(sprite.pixels.width() == SpriteWidth);
+    assert(sprite.pixels.height() == SpriteHeight);
+    for(int x=0; x < SpriteWidth; x++)
+    {
+        for(int y=0; y < SpriteHeight; y++)
+        {
+            if(sprite.pixels(x, y) != mBackgroundColor)
+                return x;
+        }
+    }
+    return SpriteWidth;
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+
+int OverlayOptimiser::getNumBlankPixelsRight(OverlayOptimiser::Sprite sprite) const
+{
+    assert(sprite.pixels.width() == SpriteWidth);
+    assert(sprite.pixels.height() == SpriteHeight);
+    for(int x=0; x < SpriteWidth; x++)
+    {
+        for(int y=0; y < SpriteHeight; y++)
+        {
+            if(sprite.pixels(SpriteWidth - 1 - x, y) != mBackgroundColor)
+                return x;
+        }
+    }
+    return SpriteWidth;
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+
+std::vector<std::vector<OverlayOptimiser::Sprite>> OverlayOptimiser::getAdjacentSlices(std::vector<OverlayOptimiser::Sprite> sprites) const
+{
+    std::vector<std::vector<OverlayOptimiser::Sprite>> slices;
+    while(sprites.size() > 0)
+    {
+        bool sliceFound = false;
+        for(size_t i = 1; i < sprites.size(); i++)
+        {
+            const OverlayOptimiser::Sprite& previous = sprites[i-1];
+            if(sprites[i].x != previous.x + SpriteWidth ||
+               sprites[i].y != previous.y ||
+               sprites[i].p != previous.p)
+            {
+                std::vector<OverlayOptimiser::Sprite> slice;
+                slice.insert(slice.end(), sprites.begin(), sprites.begin() + i);
+                sprites.erase(sprites.begin(), sprites.begin() + i);
+                slices.push_back(slice);
+                sliceFound = true;
+                break;
+            }
+        }
+        if(!sliceFound)
+        {
+            slices.push_back(sprites);
+            break;
+        }
+    }
+    return slices;
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+
+std::vector<OverlayOptimiser::Sprite> OverlayOptimiser::optimizeHorizontallyAdjacentSprites(const std::vector<OverlayOptimiser::Sprite>& sprites) const
+{
+    std::vector<std::vector<OverlayOptimiser::Sprite>> adjacentSlices = getAdjacentSlices(sprites);
+    std::vector<OverlayOptimiser::Sprite> newSprites;
+    for(auto& adjacentSlice : adjacentSlices)
+    {
+        Sprite& leftMostSprite = adjacentSlice[0];
+        Sprite& rightMostSprite = adjacentSlice[adjacentSlice.size() - 1];
+        int numBlankPixelsLeft = getNumBlankPixelsLeft(leftMostSprite);
+        int numBlankPixelsRight = getNumBlankPixelsRight(rightMostSprite);
+        if(numBlankPixelsLeft + numBlankPixelsRight >= SpriteWidth)
+        {
+            // Move entire slice right by number of pixels given by left_padding
+            for(Sprite& s : adjacentSlice)
+            {
+                s.x += numBlankPixelsLeft;
+            }
+            adjacentSlice.pop_back();
+        }
+        newSprites.insert(newSprites.end(), adjacentSlice.begin(), adjacentSlice.end());
+    }
+    return newSprites;
 }
 
 //---------------------------------------------------------------------------------------------------------------------

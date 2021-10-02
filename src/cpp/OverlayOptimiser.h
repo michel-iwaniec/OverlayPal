@@ -96,6 +96,13 @@ public:
 
     static uint8_t indexInPalette(const std::set<uint8_t>& palette, uint8_t color);
 
+    int getNumBlankPixelsLeft(Sprite sprite) const;
+    int getNumBlankPixelsRight(Sprite sprite) const;
+
+    std::vector<std::vector<Sprite>> getAdjacentSlices(std::vector<Sprite> sprites) const;
+
+    std::vector<Sprite> optimizeHorizontallyAdjacentSprites(const std::vector<Sprite>& sprites) const;
+
 protected:
 
     void writeCmplDataFile(const GridLayer& layer, int gridCellColorLimit, int maxBackgroundPalettes, int maxSpritePalettes, int maxRowSize, const std::string& filename);
@@ -165,6 +172,7 @@ private:
     Array2D<uint8_t> mPaletteIndicesBackground;
     Array2D<uint8_t> mPaletteIndicesOverlay;
     const int SpriteWidth = 8;
+    const int SpriteHeight = 16;
     const int GridCellWidth = 16;
     const int GridCellHeight = 16;
     const size_t PaletteGroupSize = 4;
