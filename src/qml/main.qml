@@ -28,13 +28,14 @@ import nes.overlay.optimiser 1.0
 
 import "const.js" as Const
 import "HardwarePalette.js" as HardwarePalette
+import "version.js" as Version
 
 Window {
     id: window
     visible: true
     width: 1820
     height: 984
-    title: qsTr("OverlayPal (dev-version) https://github.com/michel-iwaniec/OverlayPal")
+    title: qsTr("OverlayPal (" + Version.VERSION_STRING + ") https://github.com/michel-iwaniec/OverlayPal")
     property var loaderProxy: null
     property var imgComponent: null
 
