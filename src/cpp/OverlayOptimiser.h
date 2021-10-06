@@ -45,6 +45,8 @@ public:
         int p;
         std::set<uint8_t> colors;
         Image2D pixels;
+        int numBlankPixelsLeft;
+        int numBlankPixelsRight;
     };
 
     OverlayOptimiser();
