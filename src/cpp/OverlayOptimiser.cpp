@@ -921,6 +921,11 @@ std::vector<OverlayOptimiser::Sprite> OverlayOptimiser::spritesOverlay() const
     std::vector<OverlayOptimiser::Sprite> sprites = spritesOverlayGrid();
     std::vector<OverlayOptimiser::Sprite> spritesFree = spritesOverlayFree();
     sprites.insert( sprites.end(), spritesFree.begin(), spritesFree.end() );
+    for(Sprite& s : sprites)
+    {
+        s.numBlankPixelsLeft = getNumBlankPixelsLeft(s);
+        s.numBlankPixelsRight = getNumBlankPixelsRight(s);
+    }
     return optimizeHorizontallyAdjacentSprites(sprites);
 }
 
@@ -998,18 +1003,24 @@ std::vector<OverlayOptimiser::Sprite> OverlayOptimiser::optimizeHorizontallyAdja
     std::vector<OverlayOptimiser::Sprite> newSprites;
     for(auto& adjacentSlice : adjacentSlices)
     {
-        Sprite& leftMostSprite = adjacentSlice[0];
-        Sprite& rightMostSprite = adjacentSlice[adjacentSlice.size() - 1];
-        int numBlankPixelsLeft = getNumBlankPixelsLeft(leftMostSprite);
-        int numBlankPixelsRight = getNumBlankPixelsRight(rightMostSprite);
-        if(numBlankPixelsLeft + numBlankPixelsRight >= spriteWidth())
+        for(size_t firstIndex = 0; firstIndex < adjacentSlice.size(); firstIndex++)
         {
-            // Move entire slice right by number of pixels given by left_padding
-            for(Sprite& s : adjacentSlice)
+            for(size_t lastIndex = firstIndex + 1; lastIndex < adjacentSlice.size(); lastIndex++)
             {
-                s.x += numBlankPixelsLeft;
+                Sprite& leftMostSprite = adjacentSlice[firstIndex];
+                Sprite& rightMostSprite = adjacentSlice[lastIndex];
+                if(leftMostSprite.numBlankPixelsLeft + rightMostSprite.numBlankPixelsRight >= spriteWidth())
+                {
+                    // Move entire range right by number of pixels given by left_padding
+                    for(size_t i = firstIndex; i < lastIndex; i++)
+                    {
+                        adjacentSlice[i].x += leftMostSprite.numBlankPixelsLeft;
+                    }
+                    adjacentSlice.erase(adjacentSlice.begin() + lastIndex);
+                    // Skip past processed sprites
+                    firstIndex = lastIndex;
+                }
             }
-            adjacentSlice.pop_back();
         }
         newSprites.insert(newSprites.end(), adjacentSlice.begin(), adjacentSlice.end());
     }
