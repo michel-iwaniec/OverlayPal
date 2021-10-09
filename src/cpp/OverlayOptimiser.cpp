@@ -267,7 +267,7 @@ bool OverlayOptimiser::parseCmplSolution(const std::string& csvFilename,
                 int x = indices[0];
                 int y = indices[1];
                 int paletteIndex = indices[2];
-                paletteIndicesBackground(x, y) = paletteIndex + (secondPass ? 4 : 0);
+                paletteIndicesBackground(x, y) = paletteIndex + (secondPass ? NumBackgroundPalettes : 0);
             }
         }
     }
@@ -276,7 +276,7 @@ bool OverlayOptimiser::parseCmplSolution(const std::string& csvFilename,
 
 //---------------------------------------------------------------------------------------------------------------------
 
-void OverlayOptimiser::zeroEmptyPaletteIndices(Array2D<uint8_t>& paletteIndices, const GridLayer& layer)
+void OverlayOptimiser::setEmptyPaletteIndices(Array2D<uint8_t>& paletteIndices, const GridLayer& layer, uint8_t emptyIndex)
 {
     assert(paletteIndices.width() == layer.width() && paletteIndices.height() == layer.height());
     for(size_t y = 0; y < layer.height(); y++)
@@ -285,7 +285,7 @@ void OverlayOptimiser::zeroEmptyPaletteIndices(Array2D<uint8_t>& paletteIndices,
         {
             if(layer(x, y).colors.size() == 0)
             {
-                paletteIndices(x, y) = 0;
+                paletteIndices(x, y) = emptyIndex;
             }
         }
     }
@@ -434,7 +434,7 @@ bool OverlayOptimiser::convertFirstPass(const Image2D& image,
         throw Error("Failed to parse CMPL result (first pass)");
     }
     fillMissingPaletteGroups(palettesBG);
-    zeroEmptyPaletteIndices(paletteIndicesBackground, layerBackground);
+    setEmptyPaletteIndices(paletteIndicesBackground, layerBackground, 0);
     return true;
 }
 
@@ -472,7 +472,7 @@ bool OverlayOptimiser::convertSecondPass(int gridCellColorLimit,
         throw Error("Failed to parse CMPL result (second pass)");
     }
     fillMissingPaletteGroups(palettesSPR);
-    zeroEmptyPaletteIndices(paletteIndicesOverlay, layerOverlayGrid);
+    setEmptyPaletteIndices(paletteIndicesOverlay, layerOverlayGrid, NumBackgroundPalettes);
     for(const std::set<uint8_t>& palette : palettesSPR)
     {
         palettes.push_back(palette);
@@ -549,6 +549,7 @@ std::string OverlayOptimiser::convert(const Image2D& image,
         return "First pass failed.";
     // Split image into background and overlay
     moveOverlayColors(image, imageBackground, imageOverlay, layerOverlay, backgroundColor);
+    optimizeContinuity(layerBackground, paletteIndicesBackground, 0, palettes, backgroundColor);
     assert(consistentLayers(imageBackground, layerBackground, palettes, paletteIndicesBackground, backgroundColor));
     assert(!image.empty(mBackgroundColor));
     assert(!imageBackground.empty(mBackgroundColor));
@@ -589,6 +590,7 @@ std::string OverlayOptimiser::convert(const Image2D& image,
     if(!successPassTwo)
         throw Error("Second pass failed.");
     moveOverlayColors(imageOverlay, imageOverlayGrid, imageOverlayFree, layerOverlayFree, backgroundColor);
+    optimizeContinuity(layerOverlayGrid, paletteIndicesOverlay, NumBackgroundPalettes, palettes, backgroundColor);
     assert(consistentLayers(imageOverlayGrid, layerOverlayGrid, palettes, paletteIndicesOverlay, backgroundColor));
     // Copy state to persistent members
     mLayerBackground = layerBackground;
