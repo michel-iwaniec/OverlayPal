@@ -26,6 +26,15 @@
 
 //---------------------------------------------------------------------------------------------------------------------
 
+struct ContinuousPaletteRange
+{
+    size_t xLeft;
+    size_t xRight;
+    uint8_t paletteIndex;
+};
+
+//---------------------------------------------------------------------------------------------------------------------
+
 Image2D shiftImage(const Image2D& image, int shiftX, int shiftY)
 {
     const int w = image.width();
@@ -72,4 +81,106 @@ Image2D shiftImageOptimal(const Image2D& image, uint8_t backgroundColor, int cel
     shiftY = bestCostXY.second;
     Image2D shiftedImage = shiftImage(image, shiftX, shiftY);
     return shiftedImage;
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+
+bool isSubSet(const std::set<uint8_t>& s1, const std::set<uint8_t>& s2)
+{
+    for(uint8_t c : s1)
+    {
+        if(s2.count(c) == 0)
+        {
+            return false;
+        }
+    }
+    return true;
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+
+std::vector<ContinuousPaletteRange> getBestContinuousRanges(const GridLayer& layer,
+                                                            size_t y,
+                                                            uint8_t paletteIndicesOffset,
+                                                            const std::vector<std::set<uint8_t>>& palettes,
+                                                            uint8_t backgroundColor)
+{
+    std::vector<ContinuousPaletteRange> ranges;
+    std::map<size_t, std::set<size_t>> validPaletteIndices;
+    for(size_t x = 0; x < layer.width(); x++)
+    {
+        for(size_t i = paletteIndicesOffset; i < palettes.size(); i++)
+        {
+            const std::set<uint8_t>& cellColors = layer(x, y).colors;
+            if(cellColors.size() > 0 &&
+               isSubSet(cellColors, palettes[i]))
+            {
+                validPaletteIndices[x].insert(i);
+            }
+        }
+    }
+    for(size_t x = 0; x < layer.width(); x++)
+    {
+        for(size_t i : validPaletteIndices[x])
+        {
+            ContinuousPaletteRange r;
+            r.xLeft = x;
+            r.xRight = x;
+            r.paletteIndex = i;
+            while(r.xLeft > 0 && validPaletteIndices[r.xLeft - 1].count(i) > 0)
+                r.xLeft--;
+            while((r.xRight < layer.width() - 1) && validPaletteIndices[r.xRight + 1].count(i) > 0)
+                r.xRight++;
+            if(r.xRight - r.xLeft > 0)
+            {
+                ranges.push_back(r);
+            }
+        }
+    }
+    std::sort(ranges.begin(),
+              ranges.end(),
+              [](const ContinuousPaletteRange& a, const ContinuousPaletteRange& b)
+              {
+                  size_t aLength = a.xRight - a.xLeft + 1;
+                  size_t bLength = b.xRight - b.xLeft + 1;
+                  return aLength > bLength;
+              });
+    return ranges;
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+
+void optimizeContinuity(const GridLayer& layer,
+                        Array2D<uint8_t>& paletteIndices,
+                        uint8_t paletteIndicesOffset,
+                        const std::vector<std::set<uint8_t>>& palettes,
+                        uint8_t backgroundColor)
+{
+    int cellWidth = layer.cellWidth();
+    int cellHeight = layer.cellHeight();
+    for(size_t y = 0; y < layer.height(); y++)
+    {
+        // Get alternative palette indices for each cell in row
+        std::vector<bool> finalized;
+        finalized.resize(layer.width(), false);
+        //
+        std::vector<ContinuousPaletteRange> ranges = getBestContinuousRanges(layer,
+                                                                             y,
+                                                                             paletteIndicesOffset,
+                                                                             palettes,
+                                                                             backgroundColor);
+        for(auto& range : ranges)
+        {
+            // Set all to the best palette
+            for(size_t x = range.xLeft; x <= range.xRight; x++)
+            {
+                if(!finalized[x])
+                {
+                    // Remap cell pixels
+                    paletteIndices(x, y) = range.paletteIndex;
+                    finalized[x] = true;
+                }
+            }
+        }
+    }
 }

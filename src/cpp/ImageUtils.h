@@ -20,7 +20,11 @@
 #ifndef IMAGE_UTILS_H
 #define IMAGE_UTILS_H
 
+#include <cstdint>
+#include <set>
+
 #include "Array2D.h"
+#include "GridLayer.h"
 
 //
 // Created a shifted image from an original image
@@ -31,5 +35,10 @@ Image2D shiftImage(const Image2D&, int shiftX, int shiftY);
 // Find optimal shift for an image
 //
 Image2D shiftImageOptimal(const Image2D& image2D, uint8_t backgroundColor, int cellWidth, int cellHeight, int minX, int maxX, int minY, int maxY, int& shiftX, int& shiftY);
+
+//
+// Optimize palette index continuity by switching palette indices so that they are horizontally continuous where possible
+//
+void optimizeContinuity(const GridLayer& layer, Array2D<uint8_t>& paletteIndices, uint8_t paletteIndicesOffset, const std::vector<std::set<uint8_t>>& palettes, uint8_t backgroundColor);
 
 #endif // IMAGE_UTILS_H

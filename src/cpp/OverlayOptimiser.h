@@ -83,7 +83,7 @@ public:
 
     const std::vector<std::set<uint8_t>>& palettes() const;
 
-    void zeroEmptyPaletteIndices(Array2D<uint8_t>& paletteIndices, const GridLayer& layer);
+    void setEmptyPaletteIndices(Array2D<uint8_t>& paletteIndices, const GridLayer& layer, uint8_t emptyIndex);
 
     const Array2D<uint8_t>& debugPaletteIndicesBackground() const;
 
