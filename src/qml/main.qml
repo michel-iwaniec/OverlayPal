@@ -311,14 +311,15 @@ Window {
 
                 GridLayout {
                     x: 0
-                    y: 7
-                    rows: 3
+                    y: 2
+                    rows: 4
                     columns: 2
+                    rowSpacing: 0
 
                     Button {
                         id: loadImageButton
                         text: qsTr("Load PNG image...")
-                        Layout.preferredHeight: 40
+                        Layout.preferredHeight: 36
                         Layout.preferredWidth: 141
                         property int inputImageIndex: 0
                         Component.onCompleted: {
@@ -329,7 +330,7 @@ Window {
                     CheckBox {
                         id: trackInputImageCheckBox
                         text: qsTr("Track file")
-                        Layout.preferredHeight: 40
+                        Layout.preferredHeight: 36
                         Layout.preferredWidth: 113
                         leftPadding: 0
                         onCheckStateChanged: optimiser.trackInputImage = trackInputImageCheckBox.checked;
@@ -342,7 +343,10 @@ Window {
                         font.pointSize: 10
                         enabled: true
                         checked: true
-                        onCheckStateChanged: optimiser.mapInputColors = checked
+                        onCheckStateChanged: {
+                            optimiser.mapInputColors = checked
+                            uniqueColorsCheckBox.enabled = checked
+                        }
                     }
 
                     ComboBox {
@@ -353,7 +357,7 @@ Window {
                         Layout.fillWidth: true
                         rightPadding: 0
                         Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
-                        Layout.preferredHeight: 40
+                        Layout.preferredHeight: 36
                         Layout.preferredWidth: 118
                         onCurrentIndexChanged: {
                             var model = paletteFlavorComboBox.model
@@ -363,6 +367,22 @@ Window {
                         Component.onCompleted: {
                             paletteFlavorComboBox.model = optimiser.hardwarePaletteNamesModel();
                         }
+                    }
+
+                    CheckBox {
+                        id: uniqueColorsCheckBox
+                        text: qsTr("Unique colors")
+                        leftPadding: 0
+                        font.pointSize: 10
+                        enabled: true
+                        checked: false
+                        onCheckStateChanged: optimiser.uniqueColors = checked
+                    }
+
+                    Label {
+                        id: uniqueColorsEmptyLabel
+                        text: qsTr("")
+                        font.pointSize: 10
                     }
 
                     Label {
@@ -380,7 +400,7 @@ Window {
                             optimiser.backgroundColor = bgColor;
                         }
                         Layout.fillHeight: false
-                        Layout.preferredHeight: 40
+                        Layout.preferredHeight: 36
                         Layout.preferredWidth: 118
 
                         contentItem: Text {
