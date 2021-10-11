@@ -41,6 +41,7 @@ class OverlayPalGuiBackend : public QObject
     Q_PROPERTY(bool trackInputImage READ trackInputImage WRITE setTrackInputImage)
     Q_PROPERTY(bool potentialHardwarePaletteIndexedImage READ potentialHardwarePaletteIndexedImage)
     Q_PROPERTY(bool mapInputColors READ mapInputColors WRITE setMapInputColors NOTIFY mapInputColorsChanged)
+    Q_PROPERTY(bool uniqueColors READ uniqueColors WRITE setUniqueColors)
     Q_PROPERTY(int backgroundColor READ backgroundColor WRITE setBackgroundColor NOTIFY backgroundColorChanged)
     Q_PROPERTY(QString inputImageFilename READ inputImageFilename WRITE setInputImageFilename)
     Q_PROPERTY(int shiftX READ shiftX WRITE setShiftX NOTIFY shiftXChanged)
@@ -75,6 +76,8 @@ public:
     bool potentialHardwarePaletteIndexedImage() const;
     bool mapInputColors() const;
     void setMapInputColors(bool mapInputColors);
+    bool uniqueColors() const;
+    void setUniqueColors(bool uniqueColors);
     int spriteHeight() const;
     void setSpriteHeight(int spriteHeight);
     int maxBackgroundPalettes() const;
@@ -153,7 +156,7 @@ protected:
     void setHardwarePaletteName(const QString& hardwarePaletteName);
     void loadHardwarePalette(const QFileInfo& fileInfo);
     void loadHardwarePalettes(const QString& palettesPath);
-    uint8_t findClosestColorIndex(const QVector<QRgb>& colorTable, QRgb rgb);
+    uint8_t findClosestColorIndex(const QVector<QRgb>& colorTable, QRgb rgb, std::vector<bool>& availableColors);
     QImage remapColorsToNES(const QImage& inputImage, uint8_t& backgroundColor);
 
     static QImage cropOrExtendImage(const QImage& image, uint8_t backgroundColor);
@@ -164,6 +167,7 @@ protected:
     static QString urlToLocal(const QString& url);
 
 private:
+    bool mUniqueColors;
     int mTimeOut;
     bool mTrackInputImage;
     int mShiftX;

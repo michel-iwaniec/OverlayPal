@@ -74,6 +74,7 @@ QImage OverlayPalGuiBackend::image2DToQImage(const Image2D& image, const QVector
 
 OverlayPalGuiBackend::OverlayPalGuiBackend(QObject *parent):
     QObject(parent),
+    mUniqueColors(false),
     mTimeOut(60),
     mTrackInputImage(false),
     mShiftX(0),
@@ -376,6 +377,24 @@ void OverlayPalGuiBackend::setMapInputColors(bool mapInputColors)
     if(mapInputColors != mMapInputColors)
     {
         mMapInputColors = mapInputColors;
+        quantizeInputImage();
+    }
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+
+bool OverlayPalGuiBackend::uniqueColors() const
+{
+    return mUniqueColors;
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+
+void OverlayPalGuiBackend::setUniqueColors(bool uniqueColors)
+{
+    if(uniqueColors != mUniqueColors)
+    {
+        mUniqueColors = uniqueColors;
         quantizeInputImage();
     }
 }
@@ -752,7 +771,7 @@ QObject *OverlayPalGuiBackend::hardwarePaletteNamesModel()
 
 //---------------------------------------------------------------------------------------------------------------------
 
-uint8_t OverlayPalGuiBackend::findClosestColorIndex(const QVector<QRgb>& colorTable, QRgb rgb)
+uint8_t OverlayPalGuiBackend::findClosestColorIndex(const QVector<QRgb>& colorTable, QRgb rgb, std::vector<bool>& availableColors)
 {
     QColor color(rgb);
     color.setAlpha(0);
@@ -766,17 +785,14 @@ uint8_t OverlayPalGuiBackend::findClosestColorIndex(const QVector<QRgb>& colorTa
         qreal dg = (color.greenF() - c.greenF());
         qreal db = (color.blueF() - c.blueF());
         double distance2 = dr * dr + dg * dg + db * db;
-        if(distance2 < bestDistance2 && (i != 0xD || !mPreventBlackerThanBlack))
+        if(distance2 < bestDistance2 && availableColors[i])
         {
             bestDistance2 = distance2;
             bestIndex = i;
         }
     }
-    // Remap 0xE - 0xF -> 0x1D
-    if(bestIndex == 0xE || bestIndex == 0xF)
-    {
-        bestIndex = 0x1D;
-    }
+    if(mUniqueColors)
+        availableColors[bestIndex] = false;
     return static_cast<uint8_t>(bestIndex);
 }
 
@@ -784,13 +800,37 @@ uint8_t OverlayPalGuiBackend::findClosestColorIndex(const QVector<QRgb>& colorTa
 
 QImage OverlayPalGuiBackend::remapColorsToNES(const QImage& inputImage, uint8_t& backgroundColor)
 {
-    QVector<QRgb> colorTable = inputImage.colorTable();
-    QVector<QRgb> hwColorTable = makeColorTableFromHardwarePalette();
-    std::unordered_map<uint8_t, uint8_t> remapping;
-    for(size_t i = 0; i < colorTable.size(); i++)
+    // Find all colors in image
+    std::set<QRgb> colorsInImage;
+    for(int y = 0; y < inputImage.height(); y++)
     {
-        uint8_t c = findClosestColorIndex(hwColorTable, colorTable[i]);
-        remapping[i] = c;
+        for(int x = 0; x < inputImage.width(); x++)
+        {
+            QRgb rgbColor = inputImage.pixel(x, y);
+            colorsInImage.insert(rgbColor);
+        }
+    }
+    // Remap every RGB color to color in chosen hardware palette
+    QVector<QRgb> hwColorTable = makeColorTableFromHardwarePalette();
+    std::unordered_map<QRgb, uint8_t> remapping;
+    std::vector<bool> availableColors;
+    availableColors.resize(HardwarePaletteSize, true);
+    availableColors[0x0E] = false;
+    availableColors[0x1E] = false;
+    availableColors[0x2E] = false;
+    availableColors[0x3E] = false;
+    availableColors[0x0F] = false;
+    availableColors[0x1F] = false;
+    availableColors[0x2F] = false;
+    availableColors[0x3F] = false;
+    if(mPreventBlackerThanBlack)
+        availableColors[0x0D] = false;
+    for(QRgb rgbColor : colorsInImage)
+    {
+        if(!colorsInImage.count(rgbColor) > 0)
+            continue;
+        uint8_t c = findClosestColorIndex(hwColorTable, rgbColor, availableColors);
+        remapping[rgbColor] = c;
     }
     QImage outputImage(inputImage.width(), inputImage.height(), QImage::Format_Indexed8);
     outputImage.setColorTable(hwColorTable);
@@ -801,10 +841,8 @@ QImage OverlayPalGuiBackend::remapColorsToNES(const QImage& inputImage, uint8_t&
     {
         for(int x = 0; x < inputImage.width(); x++)
         {
-            uint8_t c = static_cast<uint8_t>(inputImage.pixelIndex(x, y));
-            assert(c < colorTable.size());
-            c = remapping[c];
-            assert(c < hwColorTable.size());
+            QRgb rgbColor = inputImage.pixel(x, y);
+            uint8_t c = remapping[rgbColor];
             outputImage.setPixel(x, y, c);
         }
     }
