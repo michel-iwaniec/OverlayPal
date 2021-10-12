@@ -87,7 +87,9 @@ OverlayPalGuiBackend::OverlayPalGuiBackend(QObject *parent):
     mOutputImage(ScreenWidth, ScreenHeight, QImage::Format_Indexed8),
     mBackgroundColor(0),
     mInputImage(ScreenWidth, ScreenHeight, QImage::Format_Indexed8),
-    mInputImageIndexed(ScreenWidth, ScreenHeight, QImage::Format_Indexed8)
+    mInputImageIndexed(ScreenWidth, ScreenHeight, QImage::Format_Indexed8),
+    mGridCellWidth(16),
+    mGridCellHeight(16)
 {
     mInputImage.fill(0);
     mInputImageIndexed.fill(0);
@@ -451,6 +453,21 @@ void OverlayPalGuiBackend::setShiftY(const int &shiftY)
 
 //---------------------------------------------------------------------------------------------------------------------
 
+QSize OverlayPalGuiBackend::cellSize() const
+{
+    return QSize(mGridCellWidth, mGridCellHeight);
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+
+void OverlayPalGuiBackend::setCellSize(QSize cellSize)
+{
+    mGridCellWidth = cellSize.width();
+    mGridCellHeight = cellSize.height();
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+
 int OverlayPalGuiBackend::spriteHeight() const
 {
     return mSpriteHeight;
@@ -541,7 +558,7 @@ void OverlayPalGuiBackend::findOptimalShift()
     Image2D image = qImageToImage2D(mInputImageIndexedBeforeShift);
     int shiftX = 0;
     int shiftY = 0;
-    Image2D shiftedImage = shiftImageOptimal(image, mBackgroundColor, GridCellWidth, GridCellHeight, 0, GridCellWidth - 1, 0, GridCellHeight - 1, shiftX, shiftY);
+    Image2D shiftedImage = shiftImageOptimal(image, mBackgroundColor, mGridCellWidth, mGridCellHeight, 0, mGridCellWidth - 1, 0, mGridCellHeight - 1, shiftX, shiftY);
     if(shiftX != mShiftX || shiftY != mShiftY)
     {
         mShiftX = shiftX;
@@ -577,6 +594,8 @@ void OverlayPalGuiBackend::startImageConversion()
         try {
             std::string conversionError = mOverlayOptimiser.convert(mImagePendingConversion,
                                                                     mBackgroundColor,
+                                                                    mGridCellWidth,
+                                                                    mGridCellHeight,
                                                                     mSpriteHeight,
                                                                     GridCellColorLimit,
                                                                     mMaxBackgroundPalettes,
