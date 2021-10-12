@@ -121,6 +121,7 @@ Window {
             shiftGroupBox.enabled = true;
             optimisationSettingsGroupBox.enabled = true;
             spriteModeComboBox.enabled = true;
+            bgModeComboBox.enabled = true;
             // Set groupbox title to either success message or error string
             if(optimiser.conversionSuccessful)
             {
@@ -145,6 +146,12 @@ Window {
             dstImageCanvas.debugDestinationColorsBackground = optimiser.debugDestinationColorsBackground();
             dstImageCanvas.debugPaletteIndicesBackground = optimiser.debugPaletteIndicesBackground();
             dstImageCanvas.debugSprites = optimiser.debugSpritesOverlay();
+            // Update dst image to reflect converted image grid
+            dstImageCanvas.gridWidth = dstImageCanvas.debugPaletteIndicesBackground[0].length;
+            dstImageCanvas.gridHeight = dstImageCanvas.debugPaletteIndicesBackground.length;
+            dstImageCanvas.gridCellWidth = Const.NametablePixelWidth / dstImageCanvas.gridWidth;
+            dstImageCanvas.gridCellHeight = Const.NametablePixelHeight / dstImageCanvas.gridHeight;
+            dstImageCanvas.requestPaint();
             dstImageCanvas.inputImageUpdated();
         }
 
@@ -156,6 +163,7 @@ Window {
             shiftGroupBox.enabled = false;
             optimisationSettingsGroupBox.enabled = false;
             spriteModeComboBox.enabled = false;
+            bgModeComboBox.enabled = false;
             conversionBusy.running = true;
             dstImageGroupBox.title = "Conversion running...";
             optimiser.startImageConversion();
@@ -584,7 +592,7 @@ Window {
                 GridLayout {
                     x: 0
                     y: 7
-                    rows: 1
+                    rows: 2
                     columns: 2
 
                     Label {
@@ -598,10 +606,35 @@ Window {
                         model: ["8x16", "8x8"]
                         Layout.fillHeight: false
                         Layout.preferredHeight: 40
-                        Layout.preferredWidth: 80
+                        Layout.preferredWidth: 90
                         onCurrentIndexChanged: {
-                            console.debug(model[currentIndex])
                             optimiser.spriteHeight = (model[currentIndex] == "8x8" ? 8 : 16);
+                        }
+                        Component.onCompleted: {
+                        }
+                    }
+
+                    Label {
+                        id: bgModeLabel
+                        text: qsTr("BG")
+                        font.pointSize: 10
+                    }
+
+                    ComboBox {
+                        id: bgModeComboBox
+                        model: ["16x16", "8x8"]
+                        Layout.fillHeight: false
+                        Layout.preferredHeight: 40
+                        Layout.preferredWidth: 90
+                        onCurrentIndexChanged: {
+                            var w = (model[currentIndex] == "8x8" ? 8 : 16);
+                            var h = (model[currentIndex] == "8x8" ? 8 : 16);
+                            srcImageCanvas.gridCellWidth = w;
+                            srcImageCanvas.gridCellHeight = h;
+                            srcImageCanvas.gridWidth = Const.NametablePixelWidth / w;
+                            srcImageCanvas.gridHeight = Const.NametablePixelHeight / h;
+                            srcImageCanvas.requestPaint();
+                            optimiser.cellSize = Qt.size(w, h);
                         }
                         Component.onCompleted: {
                         }
@@ -897,6 +930,7 @@ Window {
                                 convertImageButton.enabled = false
                                 // Connect signals to start automatically
                                 spriteModeComboBox.currentValueChanged.connect(optimiser.startImageConversionWrapper);
+                                bgModeComboBox.currentValueChanged.connect(optimiser.startImageConversionWrapper);
                                 xShiftSpinBox.valueModified.connect(optimiser.startImageConversionWrapper);
                                 yShiftSpinBox.valueModified.connect(optimiser.startImageConversionWrapper);
                                 maxBackgroundPalettesSpinBox.valueModified.connect(optimiser.startImageConversionWrapper);
@@ -912,6 +946,7 @@ Window {
                                 convertImageButton.enabled = true
                                 // Disconnect signals to stop starting automatically
                                 spriteModeComboBox.currentValueChanged.disconnect(optimiser.startImageConversionWrapper);
+                                bgModeComboBox.currentValueChanged.disconnect(optimiser.startImageConversionWrapper);
                                 xShiftSpinBox.valueModified.disconnect(optimiser.startImageConversionWrapper);
                                 yShiftSpinBox.valueModified.disconnect(optimiser.startImageConversionWrapper);
                                 maxBackgroundPalettesSpinBox.valueModified.disconnect(optimiser.startImageConversionWrapper);

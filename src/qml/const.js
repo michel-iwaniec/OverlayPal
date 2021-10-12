@@ -19,3 +19,5 @@
 .pragma library
 var NumPaletteGroupsBG = 4;
 var NumPaletteGroupsSPR = 4;
+var NametablePixelWidth = 256;
+var NametablePixelHeight = 240;
