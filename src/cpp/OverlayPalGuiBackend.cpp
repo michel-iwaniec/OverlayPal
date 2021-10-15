@@ -601,7 +601,7 @@ void OverlayPalGuiBackend::startImageConversion()
                                                                     mMaxBackgroundPalettes,
                                                                     mMaxSpritePalettes,
                                                                     mMaxSpritesPerScanline,
-                                                                    mTimeOut);
+                                                                    32 * mTimeOut);
             // successful
             QVector<QRgb> colorTable = makeColorTable();
             Image2D remappedImage = mOverlayOptimiser.outputImage();
