@@ -20,11 +20,12 @@
 #ifndef OVERLAY_OPTIMISER_H
 #define OVERLAY_OPTIMISER_H
 
-#include <functional>
-#include <unordered_map>
+#include <stdexcept>
 
 #include "ImageUtils.h"
 #include "GridLayer.h"
+#include "Array2D.h"
+#include "Sprite.h"
 
 class OverlayOptimiser
 {
@@ -36,17 +37,6 @@ public:
         Error(const std::string& description):
             std::runtime_error(description)
         {}
-    };
-
-    struct Sprite
-    {
-        int x;
-        int y;
-        int p;
-        std::set<uint8_t> colors;
-        Image2D pixels;
-        int numBlankPixelsLeft;
-        int numBlankPixelsRight;
     };
 
     OverlayOptimiser();
@@ -93,11 +83,11 @@ public:
 
     const GridLayer& layerOverlay() const;
 
-    std::vector<OverlayOptimiser::Sprite> spritesOverlayGrid() const;
-    std::vector<OverlayOptimiser::Sprite> spritesOverlayFree() const;
-    std::vector<OverlayOptimiser::Sprite> spritesOverlay() const;
+    std::vector<Sprite> spritesOverlayGrid() const;
+    std::vector<Sprite> spritesOverlayFree() const;
+    std::vector<Sprite> spritesOverlay() const;
 
-    int getMaxSpritesPerScanline(const std::vector<OverlayOptimiser::Sprite>& sprites) const;
+    int getMaxSpritesPerScanline(const std::vector<Sprite>& sprites) const;
 
     static uint8_t indexInPalette(const std::set<uint8_t>& palette, uint8_t color);
 
@@ -110,6 +100,8 @@ public:
 
     int spriteWidth() const;
     int spriteHeight() const;
+
+    uint8_t backgroundColor() const;
 
 protected:
 
@@ -160,8 +152,7 @@ protected:
 
     void fillMissingPaletteGroups(std::vector<std::set<uint8_t>>& palettes);
 
-    OverlayOptimiser::Sprite extractSprite(Image2D& overlayImage, size_t x, size_t y, size_t spriteWidth, size_t spriteHeight, const std::set<uint8_t>& colors, bool removePixels) const;
-    OverlayOptimiser::Sprite extractSpriteWithBestPalette(Image2D& overlayImage, size_t x, size_t y, size_t spriteWidth, size_t spriteHeight, bool removePixels) const;
+    Sprite extractSpriteWithBestPalette(Image2D& overlayImage, size_t x, size_t y, size_t spriteWidth, size_t spriteHeight, bool removePixels) const;
 
 private:
     std::string mExecutablePath;

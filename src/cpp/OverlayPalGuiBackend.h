@@ -119,6 +119,10 @@ public:
     Q_INVOKABLE QVariantList debugSpritesOverlay() const;
 
     Q_INVOKABLE void saveOutputImage(QString filename, int paletteMask);
+    Q_INVOKABLE void exportOutputImage(QString filename, int paletteMask);
+
+    bool writeBinaryFile(QString filename, const QByteArray& a);
+    bool writeBinaryFile(const QString& filename, const std::vector<uint8_t> v);
 
 
 public slots:

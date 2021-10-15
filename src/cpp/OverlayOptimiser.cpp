@@ -24,6 +24,7 @@
 #include <sstream>
 #include <cstdio>
 #include <array>
+#include <functional>
 
 #include "SubProcess.h"
 
@@ -768,75 +769,45 @@ const std::vector<std::set<uint8_t>> &OverlayOptimiser::palettes() const
 
 //---------------------------------------------------------------------------------------------------------------------
 
-OverlayOptimiser::Sprite OverlayOptimiser::extractSprite(Image2D& image,
-                                                         size_t xPos,
-                                                         size_t yPos,
-                                                         size_t width,
-                                                         size_t height,
-                                                         const std::set<uint8_t>& colors,
-                                                         bool removePixels) const
-{
-    OverlayOptimiser::Sprite s;
-    s.pixels = Image2D(width, height);
-    s.x = xPos;
-    s.y = yPos;
-    for(size_t y = 0; y < height; y++)
-    {
-        for(size_t x = 0; x < width; x++)
-        {
-            uint8_t c = image(xPos + x, yPos + y);
-            bool insideImage = xPos + x < image.width() && yPos + y < image.height();
-            if(colors.count(c) > 0 && insideImage)
-            {
-                s.pixels(x, y) = c;
-                s.colors.insert(c);
-                if(removePixels)
-                {
-                    image(xPos + x, yPos + y) = mBackgroundColor;
-                }
-            }
-            else
-            {
-                s.pixels(x, y) = mBackgroundColor;
-            }
-        }
-    }
-    return s;
-}
-
-//---------------------------------------------------------------------------------------------------------------------
-
-OverlayOptimiser::Sprite OverlayOptimiser::extractSpriteWithBestPalette(Image2D& overlayImage,
-                                                                        size_t x,
-                                                                        size_t y,
-                                                                        size_t width,
-                                                                        size_t height,
-                                                                        bool removePixels) const
+Sprite OverlayOptimiser::extractSpriteWithBestPalette(Image2D& overlayImage,
+                                                      size_t x,
+                                                      size_t y,
+                                                      size_t width,
+                                                      size_t height,
+                                                      bool removePixels) const
 {
     // Try extracting sprites for each palette, and keep track of best one (the one extracting most colors)
     size_t bestIndex = 0;
     size_t bestMaxColors = 0;
     for(size_t i = NumBackgroundPalettes; i < NumBackgroundPalettes + NumSpritePalettes; i++)
     {
-        OverlayOptimiser::Sprite s = extractSprite(overlayImage,
-                                                   x,
-                                                   y,
-                                                   width,
-                                                   height,
-                                                   mPalettes[i],
-                                                   false);
+        Sprite s = extractSprite(overlayImage,
+                                 x,
+                                 y,
+                                 width,
+                                 height,
+                                 mPalettes[i],
+                                 mBackgroundColor,
+                                 false);
         if(s.colors.size() > bestMaxColors)
             bestIndex = i;
     }
     // Do final extraction with (potential) pixel removal
-    OverlayOptimiser::Sprite s = extractSprite(overlayImage, x, y, width, height, mPalettes[bestIndex], removePixels);
+    Sprite s = extractSprite(overlayImage,
+                             x,
+                             y,
+                             width,
+                             height,
+                             mPalettes[bestIndex],
+                             mBackgroundColor,
+                             removePixels);
     s.p = bestIndex;
     return s;
 }
 
 //---------------------------------------------------------------------------------------------------------------------
 
-std::vector<OverlayOptimiser::Sprite> OverlayOptimiser::spritesOverlayGrid() const
+std::vector<Sprite> OverlayOptimiser::spritesOverlayGrid() const
 {
     const GridLayer& layer = mLayerOverlay;
     const Array2D<uint8_t>& paletteIndicesOverlay = mPaletteIndicesOverlay;
@@ -849,13 +820,14 @@ std::vector<OverlayOptimiser::Sprite> OverlayOptimiser::spritesOverlayGrid() con
             if(layer(x, y).colors.size() > 0)
             {
                 uint8_t p = paletteIndicesOverlay(x, y);
-                OverlayOptimiser::Sprite s = extractSprite(overlayImage,
-                                                           x * layer.cellWidth(),
-                                                           y * layer.cellHeight(),
-                                                           spriteWidth(),
-                                                           spriteHeight(),
-                                                           mPalettes[p],
-                                                           false);
+                Sprite s = extractSprite(overlayImage,
+                                         x * layer.cellWidth(),
+                                         y * layer.cellHeight(),
+                                         spriteWidth(),
+                                         spriteHeight(),
+                                         mPalettes[p],
+                                         mBackgroundColor,
+                                         false);
                 s.p = p;
                 sprites.push_back(s);
             }
@@ -866,10 +838,10 @@ std::vector<OverlayOptimiser::Sprite> OverlayOptimiser::spritesOverlayGrid() con
 
 //---------------------------------------------------------------------------------------------------------------------
 
-std::vector<OverlayOptimiser::Sprite> OverlayOptimiser::spritesOverlayFree() const
+std::vector<Sprite> OverlayOptimiser::spritesOverlayFree() const
 {
     Image2D overlayImage = mOutputImageOverlayFree;
-    std::vector<OverlayOptimiser::Sprite> sprites;
+    std::vector<Sprite> sprites;
     size_t y = 0;
     while(y < overlayImage.height())
     {
@@ -891,7 +863,7 @@ std::vector<OverlayOptimiser::Sprite> OverlayOptimiser::spritesOverlayFree() con
             if(columnHasPixels)
             {
                 // Extract pixels into sprite at (x, y)
-                OverlayOptimiser::Sprite s = extractSpriteWithBestPalette(overlayImage, x, y, spriteWidth(), spriteHeight(), true);
+                Sprite s = extractSpriteWithBestPalette(overlayImage, x, y, spriteWidth(), spriteHeight(), true);
                 if(s.colors.size() > 0)
                 {
                     sprites.push_back(s);
@@ -916,10 +888,10 @@ std::vector<OverlayOptimiser::Sprite> OverlayOptimiser::spritesOverlayFree() con
 
 //---------------------------------------------------------------------------------------------------------------------
 
-std::vector<OverlayOptimiser::Sprite> OverlayOptimiser::spritesOverlay() const
+std::vector<Sprite> OverlayOptimiser::spritesOverlay() const
 {
-    std::vector<OverlayOptimiser::Sprite> sprites = spritesOverlayGrid();
-    std::vector<OverlayOptimiser::Sprite> spritesFree = spritesOverlayFree();
+    std::vector<Sprite> sprites = spritesOverlayGrid();
+    std::vector<Sprite> spritesFree = spritesOverlayFree();
     sprites.insert( sprites.end(), spritesFree.begin(), spritesFree.end() );
     for(Sprite& s : sprites)
     {
@@ -931,7 +903,7 @@ std::vector<OverlayOptimiser::Sprite> OverlayOptimiser::spritesOverlay() const
 
 //---------------------------------------------------------------------------------------------------------------------
 
-int OverlayOptimiser::getNumBlankPixelsLeft(OverlayOptimiser::Sprite sprite) const
+int OverlayOptimiser::getNumBlankPixelsLeft(Sprite sprite) const
 {
     assert(sprite.pixels.width() == spriteWidth());
     assert(sprite.pixels.height() == spriteHeight());
@@ -948,7 +920,7 @@ int OverlayOptimiser::getNumBlankPixelsLeft(OverlayOptimiser::Sprite sprite) con
 
 //---------------------------------------------------------------------------------------------------------------------
 
-int OverlayOptimiser::getNumBlankPixelsRight(OverlayOptimiser::Sprite sprite) const
+int OverlayOptimiser::getNumBlankPixelsRight(Sprite sprite) const
 {
     assert(sprite.pixels.width() == spriteWidth());
     assert(sprite.pixels.height() == spriteHeight());
@@ -965,20 +937,20 @@ int OverlayOptimiser::getNumBlankPixelsRight(OverlayOptimiser::Sprite sprite) co
 
 //---------------------------------------------------------------------------------------------------------------------
 
-std::vector<std::vector<OverlayOptimiser::Sprite>> OverlayOptimiser::getAdjacentSlices(std::vector<OverlayOptimiser::Sprite> sprites) const
+std::vector<std::vector<Sprite>> OverlayOptimiser::getAdjacentSlices(std::vector<Sprite> sprites) const
 {
-    std::vector<std::vector<OverlayOptimiser::Sprite>> slices;
+    std::vector<std::vector<Sprite>> slices;
     while(sprites.size() > 0)
     {
         bool sliceFound = false;
         for(size_t i = 1; i < sprites.size(); i++)
         {
-            const OverlayOptimiser::Sprite& previous = sprites[i-1];
+            const Sprite& previous = sprites[i-1];
             if(sprites[i].x != previous.x + spriteWidth() ||
                sprites[i].y != previous.y ||
                sprites[i].p != previous.p)
             {
-                std::vector<OverlayOptimiser::Sprite> slice;
+                std::vector<Sprite> slice;
                 slice.insert(slice.end(), sprites.begin(), sprites.begin() + i);
                 sprites.erase(sprites.begin(), sprites.begin() + i);
                 slices.push_back(slice);
@@ -997,10 +969,10 @@ std::vector<std::vector<OverlayOptimiser::Sprite>> OverlayOptimiser::getAdjacent
 
 //---------------------------------------------------------------------------------------------------------------------
 
-std::vector<OverlayOptimiser::Sprite> OverlayOptimiser::optimizeHorizontallyAdjacentSprites(const std::vector<OverlayOptimiser::Sprite>& sprites) const
+std::vector<Sprite> OverlayOptimiser::optimizeHorizontallyAdjacentSprites(const std::vector<Sprite>& sprites) const
 {
-    std::vector<std::vector<OverlayOptimiser::Sprite>> adjacentSlices = getAdjacentSlices(sprites);
-    std::vector<OverlayOptimiser::Sprite> newSprites;
+    std::vector<std::vector<Sprite>> adjacentSlices = getAdjacentSlices(sprites);
+    std::vector<Sprite> newSprites;
     for(auto& adjacentSlice : adjacentSlices)
     {
         for(size_t firstIndex = 0; firstIndex < adjacentSlice.size(); firstIndex++)
@@ -1029,7 +1001,7 @@ std::vector<OverlayOptimiser::Sprite> OverlayOptimiser::optimizeHorizontallyAdja
 
 //---------------------------------------------------------------------------------------------------------------------
 
-int OverlayOptimiser::getMaxSpritesPerScanline(const std::vector<OverlayOptimiser::Sprite>& sprites) const
+int OverlayOptimiser::getMaxSpritesPerScanline(const std::vector<Sprite>& sprites) const
 {
     std::vector<int> numSpritesPerScanline;
     const Image2D image = outputImage();
@@ -1074,4 +1046,11 @@ int OverlayOptimiser::spriteWidth() const
 int OverlayOptimiser::spriteHeight() const
 {
     return mSpriteHeight;
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+
+uint8_t OverlayOptimiser::backgroundColor() const
+{
+    return mBackgroundColor;
 }
