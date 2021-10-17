@@ -59,6 +59,8 @@ public:
 
     std::string convert(const Image2D& image,
                         uint8_t backgroundColor,
+                        int gridCellWidth,
+                        int gridCellHeight,
                         int _spriteHeight,
                         int gridCellColorLimit,
                         int maxBackgroundPalettes,
@@ -161,20 +163,6 @@ protected:
     OverlayOptimiser::Sprite extractSprite(Image2D& overlayImage, size_t x, size_t y, size_t spriteWidth, size_t spriteHeight, const std::set<uint8_t>& colors, bool removePixels) const;
     OverlayOptimiser::Sprite extractSpriteWithBestPalette(Image2D& overlayImage, size_t x, size_t y, size_t spriteWidth, size_t spriteHeight, bool removePixels) const;
 
-    template<typename T>
-    static Array2D<T> doubleArrayHeight(const Array2D<T>& array)
-    {
-        Array2D<T> newArray(array.width(), 2 * array.height());
-        for(size_t y = 0; y < array.height(); y++)
-        {
-            for(size_t x = 0; x < array.width(); x++)
-            {
-                newArray(x, 2 * y + 0) = array(x, y);
-                newArray(x, 2 * y + 1) = array(x, y);
-            }
-        }
-        return newArray;
-    }
 private:
     std::string mExecutablePath;
     std::string mWorkPath;
@@ -194,8 +182,6 @@ private:
     Array2D<uint8_t> mPaletteIndicesBackground;
     Array2D<uint8_t> mPaletteIndicesOverlay;
     const int SpriteWidth = 8;
-    const int GridCellWidth = 16;
-    const int GridCellHeight = 16;
     const size_t PaletteGroupSize = 4;
     const size_t NumBackgroundPalettes = 4;
     const size_t NumSpritePalettes = 4;

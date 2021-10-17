@@ -46,6 +46,7 @@ class OverlayPalGuiBackend : public QObject
     Q_PROPERTY(QString inputImageFilename READ inputImageFilename WRITE setInputImageFilename)
     Q_PROPERTY(int shiftX READ shiftX WRITE setShiftX NOTIFY shiftXChanged)
     Q_PROPERTY(int shiftY READ shiftY WRITE setShiftY NOTIFY shiftYChanged)
+    Q_PROPERTY(QSize cellSize READ cellSize WRITE setCellSize)
     Q_PROPERTY(int spriteHeight READ spriteHeight WRITE setSpriteHeight)
     Q_PROPERTY(int maxBackgroundPalettes READ maxBackgroundPalettes WRITE setMaxBackgroundPalettes)
     Q_PROPERTY(int maxSpritePalettes READ maxSpritePalettes WRITE setMaxSpritePalettes)
@@ -78,6 +79,8 @@ public:
     void setMapInputColors(bool mapInputColors);
     bool uniqueColors() const;
     void setUniqueColors(bool uniqueColors);
+    QSize cellSize() const;
+    void setCellSize(QSize cellSize);
     int spriteHeight() const;
     void setSpriteHeight(int spriteHeight);
     int maxBackgroundPalettes() const;
@@ -201,9 +204,9 @@ private:
     QFileSystemWatcher mInputFileWatcher;
 
     const size_t PaletteGroupSize = 4;
-    // 16x16 Nametable grid
-    const int GridCellWidth = 16;
-    const int GridCellHeight = 16;
+    // 16x16 or 8x8 Nametable grid
+    int mGridCellWidth;
+    int mGridCellHeight;
     const int GridCellColorLimit = 3;
     static const size_t HardwarePaletteSize = 64;
     static const int ScreenWidth = 256;
