@@ -512,9 +512,9 @@ Window {
 
                 Button {
                     id: shiftAutoOptimalButton
-                    x: 35
+                    x: 9
                     y: 122
-                    width: 141
+                    width: 167
                     height: 40
                     text: qsTr("Autodetect optimal")
                     anchors.bottom: parent.bottom
@@ -590,8 +590,12 @@ Window {
                 title: qsTr("Size mode")
 
                 GridLayout {
-                    x: 0
                     y: 7
+                    height: 85
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+                    anchors.rightMargin: 0
+                    anchors.leftMargin: 0
                     rows: 2
                     columns: 2
 
@@ -603,6 +607,8 @@ Window {
 
                     ComboBox {
                         id: spriteModeComboBox
+                        width: 0
+                        Layout.fillWidth: true
                         model: ["8x16", "8x8"]
                         Layout.fillHeight: false
                         Layout.preferredHeight: 40
@@ -622,6 +628,7 @@ Window {
 
                     ComboBox {
                         id: bgModeComboBox
+                        Layout.fillWidth: true
                         model: ["16x16", "8x8"]
                         Layout.fillHeight: false
                         Layout.preferredHeight: 40
@@ -661,6 +668,7 @@ Window {
                     CheckBox {
                         id: palette0_checkBox
                         text: qsTr("BG0")
+                        Layout.fillWidth: true
                         Layout.preferredHeight: 21
                         Layout.preferredWidth: 74
                         checked: true
@@ -674,6 +682,7 @@ Window {
                         id: palette4_checkBox
                         width: 128
                         text: qsTr("SPR0")
+                        Layout.fillWidth: true
                         Layout.preferredHeight: 21
                         Layout.preferredWidth: 80
                         checked: true
@@ -686,6 +695,7 @@ Window {
                     CheckBox {
                         id: palette1_checkBox
                         text: qsTr("BG1")
+                        Layout.fillWidth: true
                         Layout.preferredHeight: 21
                         Layout.preferredWidth: 74
                         checked: true
@@ -699,6 +709,7 @@ Window {
                         id: palette5_checkBox
                         width: 128
                         text: qsTr("SPR1")
+                        Layout.fillWidth: true
                         Layout.preferredHeight: 21
                         Layout.preferredWidth: 80
                         checked: true
@@ -711,6 +722,7 @@ Window {
                     CheckBox {
                         id: palette2_checkBox
                         text: qsTr("BG2")
+                        Layout.fillWidth: true
                         Layout.preferredHeight: 21
                         Layout.preferredWidth: 74
                         checked: true
@@ -724,6 +736,7 @@ Window {
                         id: palette6_checkBox
                         width: 128
                         text: qsTr("SPR2")
+                        Layout.fillWidth: true
                         Layout.preferredHeight: 21
                         Layout.preferredWidth: 80
                         checked: true
@@ -736,6 +749,7 @@ Window {
                     CheckBox {
                         id: palette3_checkBox
                         text: qsTr("BG3")
+                        Layout.fillWidth: true
                         Layout.preferredHeight: 21
                         Layout.preferredWidth: 74
                         checked: true
@@ -749,6 +763,7 @@ Window {
                         id: palette7_checkBox
                         width: 128
                         text: qsTr("SPR3")
+                        Layout.fillWidth: true
                         Layout.preferredHeight: 21
                         Layout.preferredWidth: 80
                         checked: true
