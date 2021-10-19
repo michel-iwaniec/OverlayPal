@@ -71,7 +71,7 @@ struct TileNES_8x16_equal
 
 //---------------------------------------------------------------------------------------------------------------------
 
-TileNES_8x8 extractTileNES_8x8(const Image2D& image, int x, int y, int w, int h, uint8_t p)
+TileNES_8x8 extractTileNES_8x8(const Image2D& image, int paletteMask, int x, int y, int w, int h, uint8_t p)
 {
     TileNES_8x8 t;
     t.p0 = 0;
@@ -83,7 +83,9 @@ TileNES_8x8 extractTileNES_8x8(const Image2D& image, int x, int y, int w, int h,
         for(int j = 0; j < w; j++)
         {
             uint8_t c = image(x + j, y + i);
-            if((c >> 2) == p)
+            int palIndex = c >> 2;
+            bool enabled = (1 << palIndex) & paletteMask;
+            if(enabled && palIndex == p)
             {
                 uint8_t b0 = (c >> 0) & 0x1;
                 uint8_t b1 = (c >> 1) & 0x1;
@@ -98,6 +100,7 @@ TileNES_8x8 extractTileNES_8x8(const Image2D& image, int x, int y, int w, int h,
 //---------------------------------------------------------------------------------------------------------------------
 
 void buildDataNES_BG(const Image2D& image,
+                     int paletteMask,
                      const Array2D<uint8_t>& paletteIndicesBackground,
                      std::vector<uint8_t>& nametable,
                      std::vector<uint8_t>& exRAM,
@@ -122,7 +125,7 @@ void buildDataNES_BG(const Image2D& image,
         for(size_t x = 0; x < nametableGridWidth; x++)
         {
             uint8_t p = paletteIndicesBackground(x / scaleWidth, y / scaleHeight);
-            TileNES_8x8 t = extractTileNES_8x8(image, tileWidth * x, tileHeight * y, tileWidth, tileHeight, p);
+            TileNES_8x8 t = extractTileNES_8x8(image, paletteMask, tileWidth * x, tileHeight * y, tileWidth, tileHeight, p);
             if(!tileDataToIndex.count(t))
             {
                 tileDataToIndex[t] = tileDataToIndex.size();
@@ -165,6 +168,7 @@ void buildDataNES_BG(const Image2D& image,
 //---------------------------------------------------------------------------------------------------------------------
 
 void buildDataNES_OAM_8x8(const Image2D& image,
+                          int paletteMask,
                           const std::vector<Sprite>& sprites,
                           std::vector<uint8_t>& oam,
                           std::vector<uint8_t>& oamCHR)
@@ -174,7 +178,7 @@ void buildDataNES_OAM_8x8(const Image2D& image,
     std::unordered_map<TileNES_8x8, size_t, TileNES_8x8_hash, TileNES_8x8_equal> tileDataToIndex;
     for(const Sprite& s : sprites )
     {
-        TileNES_8x8 t = extractTileNES_8x8(image, s.x, s.y, 8, 8, s.p);
+        TileNES_8x8 t = extractTileNES_8x8(image, paletteMask, s.x, s.y, 8, 8, s.p);
         if(!tileDataToIndex.count(t))
         {
             tileDataToIndex[t] = tileDataToIndex.size();
@@ -194,6 +198,7 @@ void buildDataNES_OAM_8x8(const Image2D& image,
 //---------------------------------------------------------------------------------------------------------------------
 
 void buildDataNES_OAM_8x16(const Image2D& image,
+                           int paletteMask,
                            const std::vector<Sprite> sprites,
                            std::vector<uint8_t>& oam,
                            std::vector<uint8_t>& oamCHR)
@@ -203,8 +208,8 @@ void buildDataNES_OAM_8x16(const Image2D& image,
     std::unordered_map<TileNES_8x16, size_t, TileNES_8x16_hash, TileNES_8x16_equal> tileDataToIndex;
     for(const Sprite& s : sprites )
     {
-        TileNES_8x8 tU = extractTileNES_8x8(image, s.x, s.y, 8, 8, s.p);
-        TileNES_8x8 tL = extractTileNES_8x8(image, s.x, s.y + 8, 8, 8, s.p);
+        TileNES_8x8 tU = extractTileNES_8x8(image, paletteMask, s.x, s.y, 8, 8, s.p);
+        TileNES_8x8 tL = extractTileNES_8x8(image, paletteMask, s.x, s.y + 8, 8, 8, s.p);
         TileNES_8x16 t;
         t.tUp0 = tU.p0;
         t.tUp1 = tU.p1;
@@ -256,21 +261,22 @@ void buildDataNES_palette(const std::vector<std::set<uint8_t> > &palettes, uint8
 
 //---------------------------------------------------------------------------------------------------------------------
 
-ExportDataNES buildExportData(const OverlayOptimiser& optimiser)
+ExportDataNES buildExportData(const OverlayOptimiser& optimiser, int paletteMask)
 {
     ExportDataNES exportData;
     Image2D image = optimiser.outputImage();
     // Background nametable / CHR
     buildDataNES_BG(image,
+                    paletteMask,
                     optimiser.debugPaletteIndicesBackground(),
                     exportData.nametable,
                     exportData.exram,
                     exportData.bgCHR);
     // Sprite OAM / CHR
     if(optimiser.spriteHeight() == 16)
-        buildDataNES_OAM_8x16(image, optimiser.spritesOverlay(), exportData.oam, exportData.oamCHR);
+        buildDataNES_OAM_8x16(image, paletteMask, optimiser.spritesOverlay(), exportData.oam, exportData.oamCHR);
     else
-        buildDataNES_OAM_8x8(image, optimiser.spritesOverlay(), exportData.oam, exportData.oamCHR);
+        buildDataNES_OAM_8x8(image, paletteMask, optimiser.spritesOverlay(), exportData.oam, exportData.oamCHR);
     // Palette
     buildDataNES_palette(optimiser.palettes(), optimiser.backgroundColor(), exportData.palette);
     return exportData;

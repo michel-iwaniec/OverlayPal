@@ -1068,7 +1068,7 @@ void OverlayPalGuiBackend::exportOutputImage(QString filename, int paletteMask)
 {
     filename = urlToLocal(filename);
     QFileInfo fi(filename);
-    ExportDataNES exportData = buildExportData(mOverlayOptimiser);
+    ExportDataNES exportData = buildExportData(mOverlayOptimiser, paletteMask);
     exportData.oam.resize(256, 0xF0); // Resize to exactly 256 bytes for compatibility
     // Create filename suffixes based on selected .nam file
     QString nametableFilename = fi.path() + "/" + fi.baseName() + ".nam";
@@ -1090,7 +1090,6 @@ void OverlayPalGuiBackend::exportOutputImage(QString filename, int paletteMask)
 
 bool OverlayPalGuiBackend::writeBinaryFile(QString filename, const QByteArray& a)
 {
-    //filename = urlToLocal(filename);
     QFile file(filename);
     if(!file.open(QFile::WriteOnly))
         return false;
@@ -1100,7 +1099,7 @@ bool OverlayPalGuiBackend::writeBinaryFile(QString filename, const QByteArray& a
 
 //---------------------------------------------------------------------------------------------------------------------
 
-bool OverlayPalGuiBackend::writeBinaryFile(const QString& filename, const std::vector<uint8_t> v)
+bool OverlayPalGuiBackend::writeBinaryFile(const QString& filename, const std::vector<uint8_t>& v)
 {
     QByteArray a;
     for(uint8_t b : v)

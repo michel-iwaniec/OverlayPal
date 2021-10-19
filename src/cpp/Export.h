@@ -35,6 +35,6 @@ struct ExportDataNES
     std::vector<uint8_t> palette;
 };
 
-ExportDataNES buildExportData(const OverlayOptimiser& optimiser);
+ExportDataNES buildExportData(const OverlayOptimiser& optimiser, int paletteMask);
 
 #endif // EXPORT_H

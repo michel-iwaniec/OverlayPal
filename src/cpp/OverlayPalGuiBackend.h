@@ -122,7 +122,7 @@ public:
     Q_INVOKABLE void exportOutputImage(QString filename, int paletteMask);
 
     bool writeBinaryFile(QString filename, const QByteArray& a);
-    bool writeBinaryFile(const QString& filename, const std::vector<uint8_t> v);
+    bool writeBinaryFile(const QString& filename, const std::vector<uint8_t>& v);
 
 
 public slots:

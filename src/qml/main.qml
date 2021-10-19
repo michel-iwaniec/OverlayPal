@@ -1008,21 +1008,7 @@ Window {
             selectExisting: false
             onAccepted: {
                 visible = false
-                // Apply current mask when saving output image
-                var maskArray = [palette0_checkBox.checked,
-                                 palette1_checkBox.checked,
-                                 palette2_checkBox.checked,
-                                 palette3_checkBox.checked,
-                                 palette4_checkBox.checked,
-                                 palette5_checkBox.checked,
-                                 palette6_checkBox.checked,
-                                 palette7_checkBox.checked];
-                var mask = 0;
-                for(var i = 0; i < maskArray.length; i++)
-                {
-                    mask |= (Number(maskArray[i]) << i);
-                }
-                optimiser.saveOutputImage(fileUrls[0], mask);
+                optimiser.saveOutputImage(fileUrls[0], getMask());
             }
             onRejected: {
                 visible = false
@@ -1042,21 +1028,7 @@ Window {
             selectExisting: false
             onAccepted: {
                 visible = false
-                // Apply current mask when exporting (TODO)
-                var maskArray = [palette0_checkBox.checked,
-                                 palette1_checkBox.checked,
-                                 palette2_checkBox.checked,
-                                 palette3_checkBox.checked,
-                                 palette4_checkBox.checked,
-                                 palette5_checkBox.checked,
-                                 palette6_checkBox.checked,
-                                 palette7_checkBox.checked];
-                var mask = 0;
-                for(var i = 0; i < maskArray.length; i++)
-                {
-                    mask |= (Number(maskArray[i]) << i);
-                }
-                optimiser.exportOutputImage(fileUrls[0], mask);
+                optimiser.exportOutputImage(fileUrls[0], getMask());
             }
             onRejected: {
                 visible = false
@@ -1066,5 +1038,24 @@ Window {
                 visible = true
             }
         }
+    }
+    // Get mask to apply to save PNG/export
+    function getMask()
+    {
+        // Apply current mask when exporting
+        var maskArray = [palette0_checkBox.checked,
+                         palette1_checkBox.checked,
+                         palette2_checkBox.checked,
+                         palette3_checkBox.checked,
+                         palette4_checkBox.checked,
+                         palette5_checkBox.checked,
+                         palette6_checkBox.checked,
+                         palette7_checkBox.checked];
+        var mask = 0;
+        for(var i = 0; i < maskArray.length; i++)
+        {
+            mask |= (Number(maskArray[i]) << i);
+        }
+        return mask;
     }
 }
