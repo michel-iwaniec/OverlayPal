@@ -869,21 +869,31 @@ Window {
                 Button {
                     id: saveImageButton
                     x: 0
-                    y: 98
+                    y: 88
                     width: 206
-                    height: 40
+                    height: 32
                     text: qsTr("Save converted PNG...")
                     Component.onCompleted: {
                         saveImageButton.onClicked.connect(saveConvertedDialog.openDialog);
                     }
                 }
-
+                Button {
+                    id: exportImageButton
+                    x: 0
+                    y: 124
+                    width: 206
+                    height: 32
+                    text: qsTr("Export...")
+                    Component.onCompleted: {
+                        exportImageButton.onClicked.connect(exportConvertedDialog.openDialog);
+                    }
+                }
                 RowLayout {
                     x: 0
-                    y: 52
+                    y: 44
                     width: 184
-                    height: 40
-                    spacing: 12
+                    height: 36
+                    spacing: 8
 
                     Label {
                         id: label11
@@ -896,6 +906,7 @@ Window {
                         to: 999
                         value: 30
                         width: 140
+                        height: 32
                         clip: false
                         scale: 1
                         wheelEnabled: true
@@ -908,11 +919,15 @@ Window {
                 RowLayout {
                     x: 0
                     y: 0
+                    height: 36
+                    spacing: 8
 
                     Button {
                         id: convertImageButton
+                        y: 0
+                        height: 32
                         text: qsTr("Convert")
-                        Layout.preferredHeight: 40
+                        Layout.preferredHeight: 36
                         Layout.preferredWidth: 103
                         onClicked: {
                             optimiser.startImageConversionWrapper();
@@ -921,6 +936,7 @@ Window {
 
                     CheckBox {
                         id: autoConversionCheckBox
+                        height: 32
                         text: qsTr("Auto")
                         antialiasing: true
                         onCheckedChanged: {
@@ -992,21 +1008,7 @@ Window {
             selectExisting: false
             onAccepted: {
                 visible = false
-                // Apply current mask when saving output image
-                var maskArray = [palette0_checkBox.checked,
-                                 palette1_checkBox.checked,
-                                 palette2_checkBox.checked,
-                                 palette3_checkBox.checked,
-                                 palette4_checkBox.checked,
-                                 palette5_checkBox.checked,
-                                 palette6_checkBox.checked,
-                                 palette7_checkBox.checked];
-                var mask = 0;
-                for(var i = 0; i < maskArray.length; i++)
-                {
-                    mask |= (Number(maskArray[i]) << i);
-                }
-                optimiser.saveOutputImage(fileUrls[0], mask);
+                optimiser.saveOutputImage(fileUrls[0], getMask());
             }
             onRejected: {
                 visible = false
@@ -1016,5 +1018,44 @@ Window {
                 visible = true
             }
         }
+        // Export converted image dialog
+        FileDialog {
+            id: exportConvertedDialog
+            visible: false
+            title: "Export RAW binary (NES) data"
+            folder: shortcuts.home
+            nameFilters: ["Nametable (*.nam)"]
+            selectExisting: false
+            onAccepted: {
+                visible = false
+                optimiser.exportOutputImage(fileUrls[0], getMask());
+            }
+            onRejected: {
+                visible = false
+            }
+            function openDialog()
+            {
+                visible = true
+            }
+        }
+    }
+    // Get mask to apply to save PNG/export
+    function getMask()
+    {
+        // Apply current mask when exporting
+        var maskArray = [palette0_checkBox.checked,
+                         palette1_checkBox.checked,
+                         palette2_checkBox.checked,
+                         palette3_checkBox.checked,
+                         palette4_checkBox.checked,
+                         palette5_checkBox.checked,
+                         palette6_checkBox.checked,
+                         palette7_checkBox.checked];
+        var mask = 0;
+        for(var i = 0; i < maskArray.length; i++)
+        {
+            mask |= (Number(maskArray[i]) << i);
+        }
+        return mask;
     }
 }

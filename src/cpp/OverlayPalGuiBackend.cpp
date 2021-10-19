@@ -26,6 +26,7 @@
 #include <iomanip>
 #include <limits>
 
+#include "Export.h"
 #include "GridLayer.h"
 #include "ImageUtils.h"
 #include "OverlayOptimiser.h"
@@ -1021,7 +1022,7 @@ QString OverlayPalGuiBackend::urlToLocal(const QString &url)
 QVariantList OverlayPalGuiBackend::debugSpritesOverlay() const
 {
     const std::vector<std::set<uint8_t>>& palettes = mOverlayOptimiser.palettes();
-    std::vector<OverlayOptimiser::Sprite> sprites = mOverlayOptimiser.spritesOverlay();
+    std::vector<Sprite> sprites = mOverlayOptimiser.spritesOverlay();
     QVariantList spritesQML;
     for(auto& s : sprites)
     {
@@ -1059,4 +1060,51 @@ void OverlayPalGuiBackend::saveOutputImage(QString filename, int paletteMask)
     QImage img = outputImage(paletteMask);
     filename = urlToLocal(filename);
     img.save(filename);
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+
+void OverlayPalGuiBackend::exportOutputImage(QString filename, int paletteMask)
+{
+    filename = urlToLocal(filename);
+    QFileInfo fi(filename);
+    ExportDataNES exportData = buildExportData(mOverlayOptimiser, paletteMask);
+    exportData.oam.resize(256, 0xF0); // Resize to exactly 256 bytes for compatibility
+    // Create filename suffixes based on selected .nam file
+    QString nametableFilename = fi.path() + "/" + fi.baseName() + ".nam";
+    QString exramFilename = fi.path() + "/" + fi.baseName() + ".exram";
+    QString bgCHRFilename = fi.path() + "/" + fi.baseName() + "_bg.chr";
+    QString sprCHRFilename = fi.path() + "/" + fi.baseName() + "_spr.chr";
+    QString oamFilename = fi.path() + "/" + fi.baseName() + "_oam.dmp";
+    QString paletteFilename = fi.path() + "/" + fi.baseName() + "_palette.dat";
+    // Write all binary data to files
+    writeBinaryFile(nametableFilename, exportData.nametable);
+    writeBinaryFile(exramFilename, exportData.exram);
+    writeBinaryFile(bgCHRFilename, exportData.bgCHR);
+    writeBinaryFile(oamFilename, exportData.oam);
+    writeBinaryFile(sprCHRFilename, exportData.oamCHR);
+    writeBinaryFile(paletteFilename, exportData.palette);
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+
+bool OverlayPalGuiBackend::writeBinaryFile(QString filename, const QByteArray& a)
+{
+    QFile file(filename);
+    if(!file.open(QFile::WriteOnly))
+        return false;
+    file.write(a);
+    return true;
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+
+bool OverlayPalGuiBackend::writeBinaryFile(const QString& filename, const std::vector<uint8_t>& v)
+{
+    QByteArray a;
+    for(uint8_t b : v)
+    {
+        a.append(b);
+    }
+    return writeBinaryFile(filename, a);
 }
