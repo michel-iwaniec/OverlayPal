@@ -22,7 +22,7 @@ import QtQuick.Controls 2.12
 import QtQuick.Layouts 1.3
 import QtQuick.Controls.Universal 2.0
 import QtQuick.Extras 1.4
-import QtQuick.Dialogs 1.0
+import QtQuick.Dialogs 1.1
 
 import nes.overlay.optimiser 1.0
 
@@ -880,6 +880,7 @@ Window {
                 width: 230
                 height: 200
                 title: qsTr("Output")
+                enabled: false
 
                 Button {
                     id: saveImageButton
@@ -993,6 +994,15 @@ Window {
 
             }
         }
+        MessageDialog {
+            id: invalidImageMessageDialog
+            title: "Error"
+            text: "Image file format not recognized."
+            icon: StandardIcon.Critical
+            onAccepted: {
+                visible = false;
+            }
+        }
         // Load input image dialog
         FileDialog {
             id: loadImageDialog
@@ -1003,7 +1013,16 @@ Window {
             selectExisting: true
             onAccepted: {
                 visible = false
-                optimiser.inputImageFilename = fileUrls[0]
+                var imageError = optimiser.validateInputImage(fileUrls[0]);
+                if(imageError === "")
+                {
+                    optimiser.inputImageFilename = fileUrls[0];
+                    saveGroupBox.enabled = true;
+                }
+                else
+                {
+                    invalidImageMessageDialog.visible = true;
+                }
             }
             onRejected: {
                 visible = false

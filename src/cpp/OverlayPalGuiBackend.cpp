@@ -331,6 +331,17 @@ void OverlayPalGuiBackend::setInputImageFilename(const QString& inputImageFilena
 
 //---------------------------------------------------------------------------------------------------------------------
 
+QString OverlayPalGuiBackend::validateInputImage(const QString& inputImageFilenameUrl) const
+{
+    QString inputImageFilename(urlToLocal(inputImageFilenameUrl));
+    QImage image(inputImageFilename);
+    if(image.isNull())
+        return "Invalid image";
+    return "";
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+
 bool OverlayPalGuiBackend::trackInputImage() const
 {
     return mTrackInputImage;

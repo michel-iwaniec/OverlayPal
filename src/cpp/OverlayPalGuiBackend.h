@@ -61,7 +61,8 @@ public:
     ~OverlayPalGuiBackend() override;
 
     QString inputImageFilename() const;
-    void setInputImageFilename(const QString& inputImageFilename);
+    void setInputImageFilename(const QString& inputImageFilenameUrl);
+    Q_INVOKABLE QString validateInputImage(const QString& inputImageFilenameUrl) const;
 
     int backgroundColor() const;
     void setBackgroundColor(int backgroundColor);
