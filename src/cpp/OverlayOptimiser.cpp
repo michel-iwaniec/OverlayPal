@@ -202,6 +202,7 @@ bool OverlayOptimiser::parseCmplSolution(const std::string& csvFilename,
         throw std::runtime_error(std::string("Failed to open solution file: ") + csvFilename);
     }
     // Read data
+    const std::string noSolutionString = "No solution has been found";
     const std::string colorsBackgroundPrefix = secondPass ? "colorsOverlayGrid[" : "colorsBG[";
     const std::string colorsOverlayPrefix = secondPass ? "colorsOverlayFree[" : "colorsOverlay[";
     const std::string palettesNamePrefix = secondPass ? "palettesOverlay[" : "palettesBG[";
@@ -220,7 +221,11 @@ bool OverlayOptimiser::parseCmplSolution(const std::string& csvFilename,
     {
         if(!std::getline(f, line))
             break;
-        if(line.rfind(colorsBackgroundPrefix, 0) == 0)
+        if(line.find(noSolutionString, 0) == 0)
+        {
+            throw std::runtime_error(std::string("No solution found"));
+        }
+        else if(line.rfind(colorsBackgroundPrefix, 0) == 0)
         {
             parseSolutionValue(line, indices, value);
             assert(indices.size() == 3 && "colors background index length mismatch");
