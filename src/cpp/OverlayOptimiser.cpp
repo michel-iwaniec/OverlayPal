@@ -406,18 +406,69 @@ void OverlayOptimiser::fillMissingPaletteGroups(std::vector<std::set<uint8_t>>& 
 
 //---------------------------------------------------------------------------------------------------------------------
 
+bool OverlayOptimiser::convertFirstPassNoBG(int gridCellColorLimit,
+                                            int maxSpritePalettes,
+                                            int maxRowSize,
+                                            const GridLayer& layer,
+                                            GridLayer& layerBackground,
+                                            GridLayer& layerOverlay,
+                                            std::vector<std::set<uint8_t>>& palettesBG,
+                                            Array2D<uint8_t>& paletteIndicesBackground)
+{
+    std::set<uint8_t> colors;
+    int maxCellsInRow = 0;
+    for(int y = 0; y < layer.height(); y++)
+    {
+        int numCellsInRow = 0;
+        for(int x = 0; x < layer.width(); x++)
+        {
+            colors.insert(layer(x, y).colors.begin(), layer(x, y).colors.end());
+            if(layer(x, y).colors.size() > 0)
+                numCellsInRow++;
+            layerOverlay(x, y) = layer(x, y);
+            layerBackground(x, y) = GridCell();
+        }
+        maxCellsInRow = std::max(maxCellsInRow, numCellsInRow);
+    }
+    fillMissingPaletteGroups(palettesBG);
+    setEmptyPaletteIndices(paletteIndicesBackground, layerBackground, 0);
+    const int maxColorsOverlay = maxSpritePalettes * gridCellColorLimit;
+    return colors.size() <= maxColorsOverlay && maxCellsInRow <= maxRowSize;
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+
 bool OverlayOptimiser::convertFirstPass(const Image2D& image,
                                         int gridCellColorLimit,
                                         int maxBackgroundPalettes,
                                         int maxSpritePalettes,
                                         int maxRowSize,
                                         int timeOut,
-                                        GridLayer& layer,
+                                        const GridLayer& layer,
                                         GridLayer& layerBackground,
                                         GridLayer& layerOverlay,
                                         std::vector<std::set<uint8_t>>& palettesBG,
                                         Array2D<uint8_t>& paletteIndicesBackground)
 {
+    // Special-case for maxBackgroundPalettes = 0
+    if(maxBackgroundPalettes == 0)
+    {
+        if(!convertFirstPassNoBG(gridCellColorLimit,
+                                 maxSpritePalettes,
+                                 maxRowSize,
+                                 layer,
+                                 layerBackground,
+                                 layerOverlay,
+                                 palettesBG,
+                                 paletteIndicesBackground))
+        {
+            throw Error("First pass of no-background conversion failed.");
+        }
+        else
+        {
+            return true;
+        }
+    }
     // Make layer for input image
     writeCmplDataFile(layer,
                       gridCellColorLimit,
@@ -450,7 +501,7 @@ bool OverlayOptimiser::convertSecondPass(int gridCellColorLimit,
                                          int maxSpritePalettes,
                                          int maxSpritesPerScanline,
                                          int timeOut,
-                                         GridLayer& layer,
+                                         const GridLayer& layer,
                                          GridLayer& layerOverlayGrid,
                                          GridLayer& layerOverlayFree,
                                          std::vector<std::set<uint8_t>>& palettes,
@@ -560,10 +611,10 @@ std::string OverlayOptimiser::convert(const Image2D& image,
     optimizeContinuity(layerBackground, paletteIndicesBackground, 0, palettes, backgroundColor);
     assert(consistentLayers(imageBackground, layerBackground, palettes, paletteIndicesBackground, backgroundColor));
     assert(!image.empty(mBackgroundColor));
-    assert(!imageBackground.empty(mBackgroundColor));
+    assert(!imageBackground.empty(mBackgroundColor) || maxBackgroundPalettes == 0);
     mOutputImageBackground = imageBackground;
     // if no colors were moved into overlay we are done
-    if(imageOverlay.empty(mBackgroundColor))
+    if(imageOverlay.empty(mBackgroundColor) || maxSpritePalettes == 0)
     {
         mOutputImage = image;
         mLayerBackground = layerBackground;
@@ -575,7 +626,10 @@ std::string OverlayOptimiser::convert(const Image2D& image,
             palettes.push_back(palette);
         }
         mPalettes = palettes;
-        return "";
+        if(imageOverlay.empty(mBackgroundColor))
+            return "";
+        else
+            return "Sprite palettes required.";
     }
     // Re-initialise overlay layer with /2 width (...and /2 height if using 8x8 sprites)
     layerOverlay = GridLayer(backgroundColor, OverlayGridCellWidth, spriteHeight(), imageOverlay);
@@ -603,13 +657,13 @@ std::string OverlayOptimiser::convert(const Image2D& image,
     mPaletteIndicesBackground = paletteIndicesBackground;
     mPaletteIndicesOverlay = paletteIndicesOverlay;
     assert(!image.empty(mBackgroundColor));
-    assert(!imageBackground.empty(mBackgroundColor));
+    assert(!imageBackground.empty(mBackgroundColor) || maxBackgroundPalettes == 0);
     assert(!imageOverlay.empty(mBackgroundColor));
     mOutputImage = image;
     mOutputImageOverlayGrid = imageOverlayGrid;
     mOutputImageOverlayFree = imageOverlayFree;
     assert(!mOutputImage.empty(mBackgroundColor));
-    assert(!mOutputImageBackground.empty(mBackgroundColor));
+    assert(!mOutputImageBackground.empty(mBackgroundColor) || maxBackgroundPalettes == 0);
     mPalettes = palettes;
     // Finally, return error if maxSpritesPerScanline boundary not met
     if(getMaxSpritesPerScanline(spritesOverlay()) > maxSpritesPerScanline)
@@ -630,7 +684,6 @@ bool OverlayOptimiser::conversionSuccessful() const
 Image2D OverlayOptimiser::outputImageBackground() const
 {
     assert(!mOutputImage.empty(mBackgroundColor));
-    assert(!mOutputImageBackground.empty(mBackgroundColor));
     return remapColors(mOutputImageBackground, mLayerBackground, mPalettes, mPaletteIndicesBackground);
 }
 
@@ -639,8 +692,6 @@ Image2D OverlayOptimiser::outputImageBackground() const
 Image2D OverlayOptimiser::outputImageOverlayGrid() const
 {
     assert(!mOutputImage.empty(mBackgroundColor));
-    assert(!mOutputImageBackground.empty(mBackgroundColor));
-    assert(!mOutputImageOverlayGrid.empty(mBackgroundColor));
     return remapColors(mOutputImageOverlayGrid, mLayerOverlay, mPalettes, mPaletteIndicesOverlay);
 }
 
@@ -673,13 +724,9 @@ Image2D OverlayOptimiser::outputImageOverlayFree() const
 Image2D OverlayOptimiser::outputImage() const
 {
     assert(!mOutputImage.empty(mBackgroundColor));
-    assert(!mOutputImageBackground.empty(mBackgroundColor));
-    assert(!mOutputImageOverlayGrid.empty(mBackgroundColor));
     Image2D background = outputImageBackground();
     Image2D overlayGrid = outputImageOverlayGrid();
     Image2D overlayFree = outputImageOverlayFree();
-    assert(!background.empty());
-    assert(!overlayGrid.empty());
     assert(background.width() == overlayGrid.width() && background.height() == overlayGrid.height());
     assert(background.width() == overlayFree.width() && background.height() == overlayFree.height());
     size_t w = background.width();
@@ -721,7 +768,6 @@ Image2D OverlayOptimiser::remapColors(const Image2D& image,
                                       const std::vector<std::set<uint8_t>>& palettes,
                                       const Array2D<uint8_t>& paletteIndices) const
 {
-    assert(!image.empty(mBackgroundColor));
     // Create per-cell mapping
     size_t gridWidth = paletteIndices.width();
     size_t gridHeight = paletteIndices.height();
@@ -761,7 +807,6 @@ Image2D OverlayOptimiser::remapColors(const Image2D& image,
             }
         }
     }
-    assert(!rImage.empty());
     return rImage;
 }
 
