@@ -128,13 +128,22 @@ protected:
                           const Array2D<uint8_t>& paletteIndices,
                           uint8_t backgroundColor);
 
+    bool convertFirstPassNoBG(int gridCellColorLimit,
+                              int maxSpritePalettes,
+                              int maxRowSize,
+                              const GridLayer& layer,
+                              GridLayer& layerBackground,
+                              GridLayer& layerOverlay,
+                              std::vector<std::set<uint8_t>>& palettesBG,
+                              Array2D<uint8_t>& paletteIndicesBackground);
+
     bool convertFirstPass(const Image2D& image,
                           int gridCellColorLimit,
                           int maxBackgroundPalettes,
                           int maxSpritePalettes,
                           int maxRowSize,
                           int timeOut,
-                          GridLayer& layer,
+                          const GridLayer& layer,
                           GridLayer& layerBackground,
                           GridLayer& layerOverlay,
                           std::vector<std::set<uint8_t>>& palettesBG,
@@ -144,7 +153,7 @@ protected:
                            int maxSpritePalettes,
                            int maxSpritesPerScanline,
                            int timeOut,
-                           GridLayer& layer,
+                           const GridLayer& layer,
                            GridLayer& layerBackground,
                            GridLayer& layerOverlay,
                            std::vector<std::set<uint8_t>>& palettes,
