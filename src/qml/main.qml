@@ -789,6 +789,7 @@ Window {
                     x: 6
                     y: -9
                     text: qsTr("Off")
+                    checked: true
                     ButtonGroup.group: gridCellDebugButtonGroup
                     onClicked: {
                         dstImageCanvas.cellDebugMode = 'off';
@@ -827,8 +828,6 @@ Window {
                     x: 6
                     y: 83
                     text: qsTr("Palette indices")
-                    enabled: true
-                    checked: true
                     ButtonGroup.group: gridCellDebugButtonGroup
                     onClicked: {
                         dstImageCanvas.cellDebugMode = 'dstColors';
