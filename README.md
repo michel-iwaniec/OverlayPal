@@ -115,13 +115,13 @@ The left-most radio buttons allow switching between what numbers are displayed
 
 ### Save converted PNG...
 
-This allows you to (with palette display settings applied). The saved image will be an indexed-color image, with 32 color entries directly representing the NES palette.
+This allows you to save the converted image (with palette display settings applied). The saved image will be an indexed-color image, with 32 color entries directly representing the 32 entries in the NES PPU palette.
 
 ### Export...
 
-This allows exporting the converted image (with palette display settings applied) to the binary formats used by the NES hardware and other NES graphics editing tools.
+This allows exporting the converted image (with palette display settings applied) to the binary formats used by the NES PPU hardware and other NES graphics editing tools.
 
-Namely, the following files are saved:
+More specifically, the following files are saved:
 * [filename].nam file - The 1kB NES nametable data storing tile indices and 16x16 attributes selecting palettes
 * [filename].exram - Extended bits for tile indices and 8x8 attributes, matching the MMC5 exRAM layout
 * [filename]_bg.chr - The character data for the background layer
@@ -138,4 +138,4 @@ In order to provide an uninterrupted flow for artists working in their favorite 
 To enable this mode, simple check these two checkboxes:
 
 * "Track file" on the leftmost UI box. This will detect changes to the image on disk.
-* "Automatic". This will trigger a conversion whenever the input image has changed.
+* "Automatic". This will trigger a conversion whenever the input image or the conversion settings have changed.
