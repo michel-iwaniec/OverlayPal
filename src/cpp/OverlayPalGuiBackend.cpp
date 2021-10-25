@@ -1085,13 +1085,12 @@ void OverlayPalGuiBackend::exportOutputImage(QString filename, int paletteMask)
     filename = urlToLocal(filename);
     QFileInfo fi(filename);
     ExportDataNES exportData = buildExportData(mOverlayOptimiser, paletteMask);
-    exportData.oam.resize(256, 0xF0); // Resize to exactly 256 bytes for compatibility
     // Create filename suffixes based on selected .nam file
     QString nametableFilename = fi.path() + "/" + fi.baseName() + ".nam";
     QString exramFilename = fi.path() + "/" + fi.baseName() + ".exram";
     QString bgCHRFilename = fi.path() + "/" + fi.baseName() + "_bg.chr";
     QString sprCHRFilename = fi.path() + "/" + fi.baseName() + "_spr.chr";
-    QString oamFilename = fi.path() + "/" + fi.baseName() + "_oam.dmp";
+    QString oamFilename = fi.path() + "/" + fi.baseName() + ".oam";
     QString paletteFilename = fi.path() + "/" + fi.baseName() + "_palette.dat";
     // Write all binary data to files
     writeBinaryFile(nametableFilename, exportData.nametable);
