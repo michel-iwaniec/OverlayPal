@@ -92,8 +92,13 @@ OverlayPalGuiBackend::OverlayPalGuiBackend(QObject *parent):
     mGridCellWidth(16),
     mGridCellHeight(16)
 {
+    QVector<QRgb> dummyColorTable;
+    dummyColorTable.push_back(0);
+    mInputImage.setColorTable(dummyColorTable);
     mInputImage.fill(0);
+    mInputImageIndexed.setColorTable(dummyColorTable);
     mInputImageIndexed.fill(0);
+    mOutputImage.setColorTable(dummyColorTable);
     mOutputImage.fill(0);
     QObject::connect(&mInputFileWatcher, SIGNAL(fileChanged(QString)), this, SLOT(handleInputFileChanged(QString)));
     std::string executablePath = QCoreApplication::applicationDirPath().toStdString();
