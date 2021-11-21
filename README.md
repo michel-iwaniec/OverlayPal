@@ -4,8 +4,7 @@
 
 OverlayPal is Free Software, and all the source code is located at https://github.com/michel-iwaniec/OverlayPal
 
-For the less adventurous, automatically built executables can be downloaded from the AppVeyor build site:
-https://ci.appveyor.com/project/michel-iwaniec/overlaypal
+For the less adventurous, the latest stable binary can be downloaded at https://github.com/michel-iwaniec/OverlayPal/releases
 
 ## So what is this thing?
 
@@ -53,6 +52,14 @@ If you wish to try out converting existing RGB images using a different palette 
 
 Simply put a 192-byte .pal files (used by most NES emulators) in the "nespalettes" folder and OverlayPal will load this palette and allow using it for both color display and RGB color mapping.
 
+#### Unique colors option
+
+With arbitrary images not created from a specific NES palette flavor, you might find a nuisance in how colors meant to be distinct sometimes get remapped to identical colors, effectively turning the color remapping into a lossy conversion.
+
+To remedy this issue, enabling the "Unique colors" option ensures each unique color will remain unique after color mapping is applied, at the cost of a poorer preservation of a color's hue.
+
+The "Unique colors" option is NOT recommended if your input image contains just slightly different colors by accident that you actually intended to be the same color.
+
 ### Converting an image
 
 Pressing "Convert" will convert the image using the CMPL optimisation solver. The right image will show a busy indicator, and eventually come back with a success or failure to convert. The "Generated Palettes" window will also show the background / sprite palettes of the output image.
@@ -75,6 +82,13 @@ Normally you would want to leave these at their default maximum values. However,
 The grid of the background means that shifting pixel art horizontally / vertically by 1-15 pixels can significantly affect the color count of each cell, and make a conversion possible / not possible.
 
 OverlayPal provides settings to do this shift on a loaded image, as well as a button to auto-detect (in truth just guess) the optimal settings.
+
+### Size mode
+
+OverlayPal allows you to globally choose the sizes of sprites as well as background grid cells.
+
+1. Sprites can be 8x16 or 8x8. 8x16 generally requires fewer sprites, while 8x8 sprites may have more success with converting images due to finer palette selection.
+2. Backgrounds can use 16x16 or 8x8 palette grid cells. 16x16 is the usual hardware limit on the NES, while 8x8 requires additional hardware such as the MMC5 mapper.
 
 ### Show/hide palette colors
 
@@ -100,13 +114,27 @@ The left-most radio buttons allow switching between what numbers are displayed
 
 ### Save converted PNG...
 
-This allows you to (with palette display settings applied). The saved image will be an indexed-color image, with 32 color entries directly representing the NES palette.
+This allows you to save the converted image (with palette display settings applied). The saved image will be an indexed-color image, with 32 color entries directly representing the 32 entries in the NES PPU palette.
+
+### Export...
+
+This allows exporting the converted image (with palette display settings applied) to the binary formats used by the NES PPU hardware and other NES graphics editing tools.
+
+More specifically, the following files are saved:
+* [filename].nam file - The 1kB NES nametable data storing tile indices and 16x16 attributes selecting palettes
+* [filename].exram - Extended bits for tile indices and 8x8 attributes, matching the MMC5 exRAM layout
+* [filename]_bg.chr - The character data for the background layer
+* [filename]_spr.chr - The character data for the sprite layer
+* [filename].oam - The tile indices, positions and palette selection for sprites, encoded in NES Object Attribute Memory format
+* [filename]_palette.dat - The 32-entry palette representing NES PPU colors
+
+The dialog box will query you for the name of the .nam file, and derive the other filenames accordingly.
 
 ### Using OverlayPal as a background verifier task
 
 In order to provide an uninterrupted flow for artists working in their favorite pixel program, OverlayPal can detect file changes on disk and trigger a conversion automatically. This allows working on an image in a paint program, and only glancing at the OverlayPal window to verify that a conversion is still possible.
 
-To enable this mode, simple check these two checkboxes:
+To enable this mode, simply check these two checkboxes:
 
 * "Track file" on the leftmost UI box. This will detect changes to the image on disk.
-* "Automatic". This will trigger a conversion whenever the input image has changed.
+* "Automatic". This will trigger a conversion whenever the input image or the conversion settings have changed.
