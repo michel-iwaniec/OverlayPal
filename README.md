@@ -4,8 +4,7 @@
 
 OverlayPal is Free Software, and all the source code is located at https://github.com/michel-iwaniec/OverlayPal
 
-For the less adventurous, automatically built executables can be downloaded from the AppVeyor build site:
-https://ci.appveyor.com/project/michel-iwaniec/overlaypal
+For the less adventurous, the latest stable binary can be downloaded at https://github.com/michel-iwaniec/OverlayPal/releases
 
 ## So what is this thing?
 
@@ -55,9 +54,9 @@ Simply put a 192-byte .pal files (used by most NES emulators) in the "nespalette
 
 #### Unique colors option
 
-With arbitrary images not created from a specific NES palette flavor, you might find a nusiance in how colors meant to be distinct sometimes get remapped to identical colors, effectively turning the color remapping into a lossy conversion.
+With arbitrary images not created from a specific NES palette flavor, you might find a nuisance in how colors meant to be distinct sometimes get remapped to identical colors, effectively turning the color remapping into a lossy conversion.
 
-To remedy this issue, enabling the "Unique colors" option ensures each unique color will remaing unique in color mapping, at the cost of a poorer preservation of a color's hue.
+To remedy this issue, enabling the "Unique colors" option ensures each unique color will remain unique after color mapping is applied, at the cost of a poorer preservation of a color's hue.
 
 The "Unique colors" option is NOT recommended if your input image contains just slightly different colors by accident that you actually intended to be the same color.
 
@@ -88,7 +87,7 @@ OverlayPal provides settings to do this shift on a loaded image, as well as a bu
 
 OverlayPal allows you to globally choose the sizes of sprites as well as background grid cells.
 
-1. Sprites can be 8x16 or 8x8. 8x16 generally requires fewer sprites, while 8x8 sprites may have more success with converting images due to smaller palette granularity.
+1. Sprites can be 8x16 or 8x8. 8x16 generally requires fewer sprites, while 8x8 sprites may have more success with converting images due to finer palette selection.
 2. Backgrounds can use 16x16 or 8x8 palette grid cells. 16x16 is the usual hardware limit on the NES, while 8x8 requires additional hardware such as the MMC5 mapper.
 
 ### Show/hide palette colors
@@ -135,7 +134,7 @@ The dialog box will query you for the name of the .nam file, and derive the othe
 
 In order to provide an uninterrupted flow for artists working in their favorite pixel program, OverlayPal can detect file changes on disk and trigger a conversion automatically. This allows working on an image in a paint program, and only glancing at the OverlayPal window to verify that a conversion is still possible.
 
-To enable this mode, simple check these two checkboxes:
+To enable this mode, simply check these two checkboxes:
 
 * "Track file" on the leftmost UI box. This will detect changes to the image on disk.
 * "Automatic". This will trigger a conversion whenever the input image or the conversion settings have changed.
