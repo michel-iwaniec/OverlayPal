@@ -1008,7 +1008,7 @@ Window {
             visible: false
             title: "Load .png image"
             folder: shortcuts.home
-            nameFilters: ["Indexed PNG (*.png)"]
+            nameFilters: ["Image files (*.png *.bmp *.gif)"]
             selectExisting: true
             onAccepted: {
                 visible = false
