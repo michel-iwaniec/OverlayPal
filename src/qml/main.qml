@@ -918,7 +918,7 @@ Window {
 
                     SpinBox {
                         id: timeOutSpinBox
-                        to: 999
+                        to: 9999
                         value: 30
                         width: 140
                         height: 32

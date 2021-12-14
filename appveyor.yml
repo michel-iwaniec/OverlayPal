@@ -21,7 +21,7 @@ for:
       only:
         - job_name: win64
     cache:
-    - Cmpl-2-0-win.zip
+    - Cmpl-2-0-a-win.zip
 
     install:
       - set QTDIR=C:\Qt\5.15\msvc2019_64
@@ -34,15 +34,16 @@ for:
       - qmake OverlayPal.pro -spec win32-msvc "CONFIG+=qtquickcompiler"
       - nmake
     after_build:
-      - if not exist Cmpl-2-0-win.zip appveyor DownloadFile http://www.coliop.org/_download/Cmpl-2-0-win.zip
+      - if not exist Cmpl-2-0-a-win.zip appveyor DownloadFile http://www.coliop.org/_download/Cmpl-2-0-a-win.zip
       - mkdir OverlayPal-%VERSION_STRING%-win64-%CONFIGURATION%
       - cd OverlayPal-%VERSION_STRING%-win64-%CONFIGURATION%
       - copy ..\LICENSE .\
       - copy ..\release\OverlayPal.exe
       - xcopy ..\nespalettes nespalettes\
       - copy ..\src\cmpl\*.cmpl .\
-      - 7z x ..\Cmpl-2-0-win.zip
-      - rename Cmpl-2-0-win Cmpl
+      - 7z x ..\Cmpl-2-0-a-win.zip
+      - rename Cmpl-2-0-a-win Cmpl
+      - copy .\Cmpl\pyCmpl\LICENSE .\Cmpl\
       - windeployqt.exe --qmldir ..\src\qml OverlayPal.exe
       - cd ..
       - ps: 7z a OverlayPal-$env:VERSION_STRING-win64-$env:CONFIGURATION.zip OverlayPal-$env:VERSION_STRING-win64-$env:CONFIGURATION
@@ -78,6 +79,7 @@ for:
       - cp ../src/cmpl/*.cmpl ./
       - tar -xvf ../Cmpl-2-0-linux64.tar.gz
       - mv Cmpl-2-0-linux64 Cmpl
+      - cp ./Cmpl/pyCmpl/LICENSE ./Cmpl/
       - cd ..
       - tar -czvf OverlayPal-${VERSION_STRING}-linux_x64-${CONFIGURATION}.tar.gz OverlayPal-${VERSION_STRING}-linux_x64-${CONFIGURATION}
       - appveyor PushArtifact OverlayPal-${VERSION_STRING}-linux_x64-${CONFIGURATION}.tar.gz
