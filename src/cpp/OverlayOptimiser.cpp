@@ -25,6 +25,7 @@
 #include <cstdio>
 #include <array>
 #include <functional>
+#include <vector>
 
 #include "SubProcess.h"
 

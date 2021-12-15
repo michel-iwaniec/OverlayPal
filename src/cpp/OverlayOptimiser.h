@@ -20,6 +20,7 @@
 #ifndef OVERLAY_OPTIMISER_H
 #define OVERLAY_OPTIMISER_H
 
+#include <string>
 #include <stdexcept>
 
 #include "ImageUtils.h"
