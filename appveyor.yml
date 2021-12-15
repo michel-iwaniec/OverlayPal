@@ -9,6 +9,9 @@ environment:
   - job_name: linux_x64
     appveyor_build_worker_image: Ubuntu1804
 
+  - job_name: macOS_x64
+    appveyor_build_worker_image: macos
+
 configuration:
   - Release
 
@@ -64,8 +67,8 @@ for:
       - sh: sudo apt install -y libgl1-mesa-dev
     build_script:
       - VERSION_STRING=$(git describe --always --dirty=dev)
-      - echo ".pragma library" > src\qml\version.js
-      - echo "var VERSION_STRING = \"${VERSION_STRING}\";" >> src\qml\version.js
+      - echo ".pragma library" > src/qml/version.js
+      - echo "var VERSION_STRING = \"${VERSION_STRING}\";" >> src/qml/version.js
       - qmake OverlayPal.pro "CONFIG+=qtquickcompiler"
       - make
     after_build:
@@ -81,3 +84,37 @@ for:
       - cd ..
       - tar -czvf OverlayPal-${VERSION_STRING}-linux_x64-${CONFIGURATION}.tar.gz OverlayPal-${VERSION_STRING}-linux_x64-${CONFIGURATION}
       - appveyor PushArtifact OverlayPal-${VERSION_STRING}-linux_x64-${CONFIGURATION}.tar.gz
+
+# macOS (x64)
+
+  -
+    matrix:
+      only:
+        - job_name: macOS_x64
+    cache:
+    - Cmpl-2-0-macOs-Intel.zip
+
+    install:
+      - PATH=$HOME/Qt/5.15.2/clang_64/bin:$PATH
+    build_script:
+      - VERSION_STRING=$(git describe --always --dirty=dev)
+      - mkdir OverlayPal-${VERSION_STRING}-macOS_x64-${CONFIGURATION}
+      - if ! [ -f http://www.coliop.org/_download/Cmpl-2-0-macOs-Intel.zip ]; then appveyor DownloadFile http://www.coliop.org/_download/Cmpl-2-0-macOs-Intel.zip; fi
+      - unzip Cmpl-2-0-macOs-Intel.zip
+      - echo ".pragma library" > src/qml/version.js
+      - echo "var VERSION_STRING = \"${VERSION_STRING}\";" >> src/qml/version.js
+      - echo $PATH
+      - ls -la $HOME/Qt/5.15.2/clang_64/bin/
+      - qmake OverlayPal.pro "CONFIG+=qtquickcompiler"
+      - make
+    after_build:
+      - cd OverlayPal-${VERSION_STRING}-macOS_x64-${CONFIGURATION}
+      - cp ../LICENSE ./
+      - ls -la ./
+      - ls -la ../
+      - cp -r ../OverlayPal.app ./
+      - macdeployqt OverlayPal.app -dmg -qmldir=../src/qml
+      - cd ..
+      - tar -czvf OverlayPal-${VERSION_STRING}-macOS_x64-${CONFIGURATION}.tar.gz OverlayPal-${VERSION_STRING}-macOS_x64-${CONFIGURATION}
+      - appveyor PushArtifact OverlayPal-${VERSION_STRING}-macOS_x64-${CONFIGURATION}.tar.gz
+

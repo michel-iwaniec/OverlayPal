@@ -16,7 +16,6 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 //
 
-#include <QGuiApplication>
 #include <QQmlApplicationEngine>
 
 #include <QCoreApplication>
@@ -25,14 +24,13 @@
 #include <QDebug>
 
 #include "OverlayPalGuiBackend.h"
+#include "OverlayPalApp.h"
 
 int main(int argc, char *argv[])
 {
     QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
 
-    QGuiApplication app(argc, argv);
-    app.setOrganizationName("RTC");
-    app.setOrganizationDomain("nodomain");
+    OverlayPalApp app(argc, argv);
 
     qmlRegisterType<OverlayPalGuiBackend>("nes.overlay.optimiser",1,0,"OverlayPalGuiBackend");
     QQmlApplicationEngine engine;

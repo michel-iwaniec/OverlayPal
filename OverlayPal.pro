@@ -4,6 +4,9 @@ CONFIG += console
 #CONFIG += qml_debug
 CONFIG += c++17
 
+# enable this to have a sane debugging experience.
+OVERLAYPAL_FEATURES += copy_cmpl_to_bundle
+
 QML_IMPORT_NAME = nes.overlay.optimiser
 QML_IMPORT_MAJOR_VERSION = 1
 
@@ -21,6 +24,7 @@ DEFINES += QT_DEPRECATED_WARNINGS
 SOURCES += \
     src/cpp/Export.cpp \
     src/cpp/HardwareColorsModel.cpp \
+    src/cpp/OverlayPalApp.cpp \
     src/cpp/Sprite.cpp \
     src/cpp/main.cpp \
     src/cpp/GridLayer.cpp \
@@ -49,8 +53,27 @@ HEADERS += \
     src/cpp/Array2D.h \
     src/cpp/HardwareColorsModel.h \
     src/cpp/ImageUtils.h \
+    src/cpp/OverlayPalApp.h \
     src/cpp/OverlayPalGuiBackend.h \
     src/cpp/OverlayOptimiser.h \
     src/cpp/Sprite.h \
     src/cpp/SubProcess.h \
     src/cpp/SimplePaletteModel.h
+
+macx {
+    # copy nes palette to $app/Contents/MacOS/nespalettes
+    NES_PALETTE_FILES.files = $$files($$PWD/nespalettes/*.pal)
+    NES_PALETTE_FILES.path = Contents/MacOS/nespalettes
+    QMAKE_BUNDLE_DATA += NES_PALETTE_FILES
+    # copy cmpl to $app/Contents/MacOS/nespalettes
+    CMPL_FILES.files = $$files($$PWD/src/cmpl/*.cmpl)
+    CMPL_FILES.path = Contents/MacOS
+    QMAKE_BUNDLE_DATA += CMPL_FILES
+    contains(OVERLAYPAL_FEATURES, copy_cmpl_to_bundle) {
+        # copy cmpl
+        CMPL_BIN_FILES.files = $$files($$PWD/Cmpl-2-0-macOs-Intel/Cmpl2/Coliop.app/Contents/MacOS/*)
+        CMPL_BIN_FILES.path = Contents/MacOS/Cmpl
+        QMAKE_BUNDLE_DATA += CMPL_BIN_FILES
+    }
+}
+
