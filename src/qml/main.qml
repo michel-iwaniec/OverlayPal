@@ -43,22 +43,19 @@ Window {
         // Adapt window to either a 1080p screen or a less-than-1080p-screen.
         // TODO: Scaling choice needs to be more flexible going forward.
         var activePortion = 0.915;
+        var optimalWidth = 1920;
+        var optimalHeight = 1080;
         var zoom = 3;
         var uiScale = 1.0;
         if(Screen.width < 1920)
         {
-            width = Screen.width * activePortion;
-            height = Screen.height * activePortion;
+            optimalWidth = Screen.width;
+            optimalHeight = Screen.height;
             zoom = 2;
             uiScale = 0.7;
         }
-        else
-        {
-            width = Screen.width * activePortion;
-            height = Screen.height * activePortion;
-            zoom = 3;
-            uiScale = 1.0;
-        }
+        width = optimalWidth * activePortion;
+        height = optimalHeight * activePortion;
         // Set canvas sizes
         var w = 256 * zoom;
         var h = 240 * zoom;
@@ -69,7 +66,6 @@ Window {
         srcImageCanvas.zoom = zoom;
         dstImageCanvas.zoom = zoom;
         paletteGroupBox.contentHeight = h;
-        //width = Math.min()
         // Set UI scale factor
         uiInteractionRow.scale = uiScale;
     }
