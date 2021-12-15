@@ -16,16 +16,17 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 //
 
-#include <QCoreApplication>
 #include <QtConcurrent/QtConcurrentRun>
 #include <QQmlEngine>
 #include <QUrl>
 #include <QDebug>
+#include <QStandardPaths>
 
 #include <iostream>
 #include <iomanip>
 #include <limits>
 
+#include "OverlayPalApp.h"
 #include "Export.h"
 #include "GridLayer.h"
 #include "ImageUtils.h"
@@ -103,7 +104,14 @@ OverlayPalGuiBackend::OverlayPalGuiBackend(QObject *parent):
     QObject::connect(&mInputFileWatcher, SIGNAL(fileChanged(QString)), this, SLOT(handleInputFileChanged(QString)));
     std::string executablePath = QCoreApplication::applicationDirPath().toStdString();
     mOverlayOptimiser.setExecutablePath(executablePath);
+
+#ifdef Q_OS_MACX
+    QString pathToTmp = qApp->appStoragePath();
+    qDebug() << pathToTmp;
+    mOverlayOptimiser.setWorkPath(pathToTmp.toStdString());
+#else
     mOverlayOptimiser.setWorkPath(executablePath + "/" + "Cmpl/bin");
+#endif
     loadHardwarePalettes(QString(executablePath.c_str()) + QString("/nespalettes"));
     // Prevent QML engine from taking ownership of and destroying models
     QQmlEngine::setObjectOwnership(&mPaletteModel, QQmlEngine::CppOwnership);

@@ -38,8 +38,21 @@ std::string quoteStringOnWindows(const std::string& s)
     return std::string("\"") + s + std::string("\"");
 }
 
+std::wstring mergedParams(std::vector<std::string>& params)
+{
+    size_t length = params.size();
+    std::wstring s;
+    for(size_t i = 0; i < length; i++)
+    {
+        s += std::wstring(L" ");
+        std::wstring tempS(params[i].begin(), params[i].end());
+        s += tempS;
+    }
+    return s;
+}
+
 int executeProcess(std::string exeFilename,
-                   std::string params,
+                   std::vector<std::string> params,
                    int timeOut,
                    std::string startingDirectory)
 {
@@ -53,7 +66,7 @@ int executeProcess(std::string exeFilename,
     std::wstring exeFilenameW(exeFilename.begin(), exeFilename.end());
     std::string exeSuffix(".exe");
     exeFilenameW += std::wstring(exeSuffix.begin(), exeSuffix.end());
-    std::wstring paramsW(params.begin(), params.end());
+    std::wstring paramsW = mergedParams(params);
     // Attempt to execute
     std::wstring startingDirectoryW(startingDirectory.begin(), startingDirectory.end());
 
@@ -95,27 +108,20 @@ std::string quoteStringOnWindows(const std::string& s)
     return s;
 }
 
-std::vector<char*> splitParams(std::string& params)
+std::vector<char*> splitParams(std::vector<std::string>& params)
 {
     size_t length = params.size();
     std::vector<char*> charPtrs;
     for(size_t i = 0; i < length; i++)
     {
-        if(params[i] == ' ')
-        {
-            params[i] = 0;
-            if(i > 0 && i < length - 1)
-            {
-                charPtrs.push_back(&params[i+1]);
-            }
-        }
+        charPtrs.push_back(params[i].data());
     }
     charPtrs.push_back(nullptr);
     return charPtrs;
 }
 
 int executeProcess(std::string exeFilename,
-                   std::string params,
+                   std::vector<std::string> params,
                    int timeOut,
                    std::string startingDirectory)
 {
