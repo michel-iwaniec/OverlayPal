@@ -55,6 +55,7 @@ class OverlayPalGuiBackend : public QObject
     Q_PROPERTY(QString hardwarePaletteName READ hardwarePaletteName WRITE setHardwarePaletteName)
     Q_PROPERTY(bool conversionSuccessful READ conversionSuccessful)
     Q_PROPERTY(QString conversionError READ conversionError)
+    Q_PROPERTY(int numBackgroundTiles READ numBackgroundTiles)
 
 public:
     explicit OverlayPalGuiBackend(QObject *parent = nullptr);
@@ -97,6 +98,8 @@ public:
     bool conversionSuccessful() const;
 
     const QString& conversionError() const;
+
+    int numBackgroundTiles() const;
 
     static QString imageAsBase64(const QImage& image);
 

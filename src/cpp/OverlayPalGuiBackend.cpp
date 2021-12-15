@@ -1123,3 +1123,11 @@ bool OverlayPalGuiBackend::writeBinaryFile(const QString& filename, const std::v
     }
     return writeBinaryFile(filename, a);
 }
+
+//---------------------------------------------------------------------------------------------------------------------
+
+int OverlayPalGuiBackend::numBackgroundTiles() const
+{
+    ExportDataNES exportData = buildExportData(mOverlayOptimiser, 0xFF);
+    return exportData.bgCHR.size() / ExportDataNES::TileSize;
+}
