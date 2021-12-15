@@ -30,3 +30,12 @@
 *.exe
 *.out
 *.app
+
+# Qt
+*.pro.user
+
+# Mac
+.DS_Store
+
+# CMPL
+/Cmpl*
