@@ -121,7 +121,11 @@ Window {
             // Set groupbox title to either success message or error string
             if(optimiser.conversionSuccessful)
             {
-                dstImageGroupBox.title = "Conversion successful";
+                var numBackgroundTiles = optimiser.numBackgroundTiles;
+                var sprites = optimiser.debugSpritesOverlay();
+                dstImageGroupBox.title = "Conversion successful." +
+                                         "    BG tiles: " + numBackgroundTiles +
+                                         "    Sprites: " + sprites.length;
             }
             else
             {

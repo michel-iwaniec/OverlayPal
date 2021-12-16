@@ -33,6 +33,7 @@ struct ExportDataNES
     std::vector<uint8_t> oamCHR;
     std::vector<uint8_t> oam;
     std::vector<uint8_t> palette;
+    static constexpr size_t TileSize = 16;
 };
 
 ExportDataNES buildExportData(const OverlayOptimiser& optimiser, int paletteMask);
