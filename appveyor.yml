@@ -6,8 +6,8 @@ environment:
 #  - job_name: win64
 #    appveyor_build_worker_image: Visual Studio 2019
 
-#  - job_name: linux_x64
-#    appveyor_build_worker_image: Ubuntu1804
+  - job_name: linux_x64
+    appveyor_build_worker_image: Ubuntu1804
 
   - job_name: macOS_x64
     appveyor_build_worker_image: macos
@@ -67,8 +67,8 @@ for:
       - sh: sudo apt install -y libgl1-mesa-dev
     build_script:
       - VERSION_STRING=$(git describe --always --dirty=dev)
-      - echo ".pragma library" > src\qml\version.js
-      - echo "var VERSION_STRING = \"${VERSION_STRING}\";" >> src\qml\version.js
+      - echo ".pragma library" > src/qml/version.js
+      - echo "var VERSION_STRING = \"${VERSION_STRING}\";" >> src/qml/version.js
       - qmake OverlayPal.pro "CONFIG+=qtquickcompiler"
       - make
     after_build:
@@ -100,8 +100,8 @@ for:
 #      - sh: sudo apt install -y libgl1-mesa-dev
     build_script:
       - VERSION_STRING=$(git describe --always --dirty=dev)
-      - echo ".pragma library" > src\qml\version.js
-      - echo "var VERSION_STRING = \"${VERSION_STRING}\";" >> src\qml\version.js
+      - echo ".pragma library" > src/qml/version.js
+      - echo "var VERSION_STRING = \"${VERSION_STRING}\";" >> src/qml/version.js
       - echo $PATH
       - ls -la $HOME/Qt/5.15.2/clang_64/bin/
       - qmake OverlayPal.pro "CONFIG+=qtquickcompiler"
