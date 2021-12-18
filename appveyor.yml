@@ -114,10 +114,12 @@ for:
       - ls -la ./
       - ls -la ../
       - cp -r ../OverlayPal.app ./
-      - cp -r ../nespalettes ./
-      - cp ../src/cmpl/*.cmpl ./
+      - cp -r ../nespalettes ./OverlayPal.app/Contents/MacOS/
+      - cp ../src/cmpl/*.cmpl ./OverlayPal.app/Contents/MacOS/
       - unzip ../Cmpl-2-0-macOs-Intel.zip
-      - mv Cmpl-2-0-macOs-Intel Cmpl
+      - cp -r Cmpl-2-0-macOs-Intel/Cmpl2/Coliop.app/Contents/MacOS ./OverlayPal.app/Contents/MacOS/
+      - mv ./OverlayPal.app/Contents/MacOS/MacOS ./OverlayPal.app/Contents/MacOS/Cmpl
+      - rm -rf Cmpl-2-0-macOs-Intel
       - macdeployqt OverlayPal.app -dmg -qmldir=../src/qml
       - cd ..
       - tar -czvf OverlayPal-${VERSION_STRING}-macOS_x64-${CONFIGURATION}.tar.gz OverlayPal-${VERSION_STRING}-macOS_x64-${CONFIGURATION}
