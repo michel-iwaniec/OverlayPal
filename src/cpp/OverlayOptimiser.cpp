@@ -138,9 +138,11 @@ void OverlayOptimiser::runCmplProgram(const std::string& inputFilename,
     outputFile.close();
     // Execute process
     std::string cmplExecutable("Cmpl/bin/cmpl");
-    std::string params;
-    params += " -i " + quoteStringOnWindows(outputFilename);
-    params += " -solutionCsv " + quoteStringOnWindows(solutionCsvFilename);
+    std::vector<std::string> params;
+    params.push_back("-i");
+    params.push_back(quoteStringOnWindows(outputFilename));
+    params.push_back("-solutionCsv");
+    params.push_back(quoteStringOnWindows(solutionCsvFilename));
     int exitCode = executeProcess(exePathFilename(cmplExecutable), params, timeOut, mWorkPath);
     if(exitCode != 0)
     {
