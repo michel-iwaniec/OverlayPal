@@ -121,15 +121,11 @@ void OverlayOptimiser::writeCmplDataFile(const GridLayer& layer, int gridCellCol
 
 //---------------------------------------------------------------------------------------------------------------------
 
-#include <QProcess>
-#include <QDebug>
-
 void OverlayOptimiser::runCmplProgram(const std::string& inputFilename,
                                       const std::string& outputFilename,
                                       const std::string& solutionCsvFilename,
                                       int timeOut)
 {
-
     // Make a copy of the original program and prepend timeOut parameter to it
     // This is an ugly work-around for there being no other way(?) to set the CBC timeout parameter :(
     std::ifstream inputFile(inputFilename, std::ifstream::in);
@@ -141,34 +137,17 @@ void OverlayOptimiser::runCmplProgram(const std::string& inputFilename,
     outputFile << inputFileStr;
     outputFile.close();
     // Execute process
-    QProcess proc;
-    QString exe = QString::fromStdString(exePathFilename("Cmpl/bin/cmpl"));
-    qDebug() << exe;
-    proc.setWorkingDirectory(QString::fromStdString(mWorkPath));
-    proc.start(
-        exe,
-        {
-            "-i",
-            QString::fromStdString(outputFilename),
-            "-solutionCsv",
-            QString::fromStdString(solutionCsvFilename),
-        });
-    if (!proc.waitForFinished(-1)) {//timeOut * 1000)) {
-        qDebug() << proc.readAllStandardOutput();
-        qDebug() << proc.readAllStandardError();
+    std::string cmplExecutable("Cmpl/bin/cmpl");
+    std::vector<std::string> params;
+    params.push_back("-i");
+    params.push_back(quoteStringOnWindows(outputFilename));
+    params.push_back("-solutionCsv");
+    params.push_back(quoteStringOnWindows(solutionCsvFilename));
+    int exitCode = executeProcess(exePathFilename(cmplExecutable), params, timeOut, mWorkPath);
+    if(exitCode != 0)
+    {
         throw Error("Non-zero exit code from CMPL");
     }
-
-//                );
-//    std::string cmplExecutable();
-//    std::string params;
-//    params += " -i " + quoteStringOnWindows(outputFilename);
-//    params += " -solutionCsv " + quoteStringOnWindows(solutionCsvFilename);
-//    int exitCode = executeProcess(exePathFilename(cmplExecutable), params, timeOut, mWorkPath);
-//    if(exitCode != 0)
-//    {
-//        throw Error("Non-zero exit code from CMPL");
-//    }
 }
 
 //---------------------------------------------------------------------------------------------------------------------
