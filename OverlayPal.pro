@@ -5,7 +5,7 @@ CONFIG += console
 CONFIG += c++17
 
 # enable this to have a sane debugging experience.
-OVERLAYPAL_FEATURES += copy_cmpl_to_bundle_old
+OVERLAYPAL_FEATURES += copy_cmpl_to_bundle
 
 QML_IMPORT_NAME = nes.overlay.optimiser
 QML_IMPORT_MAJOR_VERSION = 1
@@ -71,7 +71,7 @@ macx {
     QMAKE_BUNDLE_DATA += CMPL_FILES
     contains(OVERLAYPAL_FEATURES, copy_cmpl_to_bundle) {
         # copy cmpl
-        CMPL_BIN_FILES.files = $$files($$PWD/Cmpl-2-0-macOs-Intel/Cmpl2/*)
+        CMPL_BIN_FILES.files = $$files($$PWD/Cmpl-2-0-macOs-Intel/Cmpl2/Coliop.app/Contents/MacOS/*)
         CMPL_BIN_FILES.path = Contents/MacOS/Cmpl
         QMAKE_BUNDLE_DATA += CMPL_BIN_FILES
     }
