@@ -100,6 +100,7 @@ for:
       - VERSION_STRING=$(git describe --always --dirty=dev)
       - mkdir OverlayPal-${VERSION_STRING}-macOS_x64-${CONFIGURATION}
       - if ! [ -f http://www.coliop.org/_download/Cmpl-2-0-macOs-Intel.zip ]; then appveyor DownloadFile http://www.coliop.org/_download/Cmpl-2-0-macOs-Intel.zip; fi
+      - unzip Cmpl-2-0-macOs-Intel.zip
       - echo ".pragma library" > src/qml/version.js
       - echo "var VERSION_STRING = \"${VERSION_STRING}\";" >> src/qml/version.js
       - echo $PATH
