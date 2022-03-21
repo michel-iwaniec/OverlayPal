@@ -96,10 +96,10 @@ for:
 
     install:
       - PATH=$HOME/Qt/5.15.2/clang_64/bin:$PATH
-#      - sh: sudo apt update
-#      - sh: sudo apt install -y libgl1-mesa-dev
     build_script:
       - VERSION_STRING=$(git describe --always --dirty=dev)
+      - mkdir OverlayPal-${VERSION_STRING}-macOS_x64-${CONFIGURATION}
+      - if ! [ -f http://www.coliop.org/_download/Cmpl-2-0-macOs-Intel.zip ]; then appveyor DownloadFile http://www.coliop.org/_download/Cmpl-2-0-macOs-Intel.zip; fi
       - echo ".pragma library" > src/qml/version.js
       - echo "var VERSION_STRING = \"${VERSION_STRING}\";" >> src/qml/version.js
       - echo $PATH
@@ -107,19 +107,11 @@ for:
       - qmake OverlayPal.pro "CONFIG+=qtquickcompiler"
       - make
     after_build:
-      - if ! [ -f http://www.coliop.org/_download/Cmpl-2-0-macOs-Intel.zip ]; then appveyor DownloadFile http://www.coliop.org/_download/Cmpl-2-0-macOs-Intel.zip; fi
-      - mkdir OverlayPal-${VERSION_STRING}-macOS_x64-${CONFIGURATION}
       - cd OverlayPal-${VERSION_STRING}-macOS_x64-${CONFIGURATION}
       - cp ../LICENSE ./
       - ls -la ./
       - ls -la ../
       - cp -r ../OverlayPal.app ./
-#      - cp -r ../nespalettes ./OverlayPal.app/Contents/MacOS/
-#      - cp ../src/cmpl/*.cmpl ./OverlayPal.app/Contents/MacOS/
-      - unzip ../Cmpl-2-0-macOs-Intel.zip
-      - cp -r Cmpl-2-0-macOs-Intel/Cmpl2/Coliop.app/Contents/MacOS ./OverlayPal.app/Contents/MacOS/
-      - mv ./OverlayPal.app/Contents/MacOS/MacOS ./OverlayPal.app/Contents/MacOS/Cmpl
-      - rm -rf Cmpl-2-0-macOs-Intel
       - macdeployqt OverlayPal.app -dmg -qmldir=../src/qml
       - cd ..
       - tar -czvf OverlayPal-${VERSION_STRING}-macOS_x64-${CONFIGURATION}.tar.gz OverlayPal-${VERSION_STRING}-macOS_x64-${CONFIGURATION}
