@@ -4,6 +4,9 @@ CONFIG += console
 #CONFIG += qml_debug
 CONFIG += c++17
 
+# enable this to have a sane debugging experience.
+OVERLAYPAL_FEATURES += copy_cmpl
+
 QML_IMPORT_NAME = nes.overlay.optimiser
 QML_IMPORT_MAJOR_VERSION = 1
 
@@ -21,6 +24,7 @@ DEFINES += QT_DEPRECATED_WARNINGS
 SOURCES += \
     src/cpp/Export.cpp \
     src/cpp/HardwareColorsModel.cpp \
+    src/cpp/OverlayPalApp.cpp \
     src/cpp/Sprite.cpp \
     src/cpp/main.cpp \
     src/cpp/GridLayer.cpp \
@@ -49,8 +53,62 @@ HEADERS += \
     src/cpp/Array2D.h \
     src/cpp/HardwareColorsModel.h \
     src/cpp/ImageUtils.h \
+    src/cpp/OverlayPalApp.h \
     src/cpp/OverlayPalGuiBackend.h \
     src/cpp/OverlayOptimiser.h \
     src/cpp/Sprite.h \
     src/cpp/SubProcess.h \
     src/cpp/SimplePaletteModel.h
+
+macx {
+    # copy nes palette to $app/Contents/MacOS/nespalettes
+    NES_PALETTE_FILES.files = $$files($$PWD/nespalettes/*.pal)
+    NES_PALETTE_FILES.path = Contents/MacOS/nespalettes
+    QMAKE_BUNDLE_DATA += NES_PALETTE_FILES
+    # copy cmpl to $app/Contents/MacOS/nespalettes
+    CMPL_FILES.files = $$files($$PWD/src/cmpl/*.cmpl)
+    CMPL_FILES.path = Contents/MacOS
+    QMAKE_BUNDLE_DATA += CMPL_FILES
+    contains(OVERLAYPAL_FEATURES, copy_cmpl) {
+        # copy cmpl
+        CMPL_BIN_FILES.files = $$files($$PWD/Cmpl-2-0-macOs-Intel/Cmpl2/Coliop.app/Contents/MacOS/*)
+        CMPL_BIN_FILES.path = Contents/MacOS/Cmpl
+        QMAKE_BUNDLE_DATA += CMPL_BIN_FILES
+    }
+}
+
+unix:!macx {
+    # copy nespalettes to $OUT_PWD/nespalettes
+    eval($$OUT_PWD != $$PWD) {
+        QMAKE_POST_LINK += $$QMAKE_COPY_DIR $$shell_quote($$PWD/nespalettes) $$shell_quote($$OUT_PWD/nespalettes) $$escape_expand(\\n\\t)
+    }
+    # Copy .cmpl files to $OUT_PWD/
+    QMAKE_POST_LINK += $$QMAKE_COPY_FILE $$shell_quote($$PWD/src/cmpl/FirstPass.cmpl) $$shell_quote($$OUT_PWD/FirstPass.cmpl) $$escape_expand(\\n\\t)
+    QMAKE_POST_LINK += $$QMAKE_COPY_FILE $$shell_quote($$PWD/src/cmpl/SecondPass.cmpl) $$shell_quote($$OUT_PWD/SecondPass.cmpl) $$escape_expand(\\n\\t)
+    # Conditionally copy entire cmpl directory only if copy_cmpl is set
+    contains(OVERLAYPAL_FEATURES, copy_cmpl) {
+        QMAKE_POST_LINK += $$QMAKE_COPY_DIR $$shell_quote($$PWD/Cmpl-2-0-linux64) $$shell_quote($$OUT_PWD/Cmpl) $$escape_expand(\\n\\t)
+    }
+}
+
+win32 {
+    build_pass: CONFIG(debug, debug|release) {
+        OUT_PWD_WIN = $$OUT_PWD/debug
+    }
+    else: build_pass {
+        OUT_PWD_WIN = $$OUT_PWD/release
+    }
+    # Replace / with \ to make QMAKE_COPY_* work
+    PWD_WIN=$$PWD
+    PWD_WIN ~= s?/?\\?g
+    OUT_PWD_WIN ~= s?/?\\?g
+    # copy nespalettes to $OUT_PWD_WIN/nespalettes
+    QMAKE_POST_LINK += $$QMAKE_COPY_DIR $$shell_quote($$PWD_WIN\\nespalettes) $$shell_quote($$OUT_PWD_WIN\\nespalettes) $$escape_expand(\\n\\t)
+    # Copy .cmpl files to $OUT_PWD_WIN/
+    QMAKE_POST_LINK += $$QMAKE_COPY_FILE $$shell_quote($$PWD_WIN\\src\\cmpl\\FirstPass.cmpl) $$shell_quote($$OUT_PWD_WIN\\FirstPass.cmpl) $$escape_expand(\\n\\t)
+    QMAKE_POST_LINK += $$QMAKE_COPY_FILE $$shell_quote($$PWD_WIN\\src\\cmpl\\SecondPass.cmpl) $$shell_quote($$OUT_PWD_WIN\\SecondPass.cmpl) $$escape_expand(\\n\\t)
+    # Conditionally copy entire cmpl directory only if copy_cmpl is set
+    contains(OVERLAYPAL_FEATURES, copy_cmpl) {
+        QMAKE_POST_LINK += $$QMAKE_COPY_DIR $$shell_quote($$PWD_WIN\\Cmpl-2-0-win) $$shell_quote($$OUT_PWD_WIN\\Cmpl) $$escape_expand(\\n\\t)
+    }
+}

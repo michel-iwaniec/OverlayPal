@@ -15,28 +15,26 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 //
+#pragma once
+#ifndef OVERLAYPALAPP_H
+#define OVERLAYPALAPP_H
 
-#include <QQmlApplicationEngine>
+#include <QGuiApplication>
 
-#include <QCoreApplication>
-#include <QQmlEngine>
-#include <QQmlComponent>
-#include <QDebug>
-
-#include "OverlayPalGuiBackend.h"
-#include "OverlayPalApp.h"
-
-int main(int argc, char *argv[])
+class OverlayPalApp : public QGuiApplication
 {
-    QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
+    Q_OBJECT
+public:
+    OverlayPalApp(int& argc, char **argv);
 
-    OverlayPalApp app(argc, argv);
+    QString appStoragePath(const QString& path = QString()) const;
+private:
+    bool initFS();
+    //
+    QString appDataFolder;
+};
 
-    qmlRegisterType<OverlayPalGuiBackend>("nes.overlay.optimiser",1,0,"OverlayPalGuiBackend");
-    QQmlApplicationEngine engine;
-    engine.load(QUrl(QStringLiteral("qrc:/main.qml")));
-    if (engine.rootObjects().isEmpty())
-        return -1;
+#undef qApp
+#define qApp qobject_cast<OverlayPalApp *>(QCoreApplication::instance())
 
-    return app.exec();
-}
+#endif // OVERLAYPALAPP_H

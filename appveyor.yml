@@ -9,6 +9,9 @@ environment:
   - job_name: linux_x64
     appveyor_build_worker_image: Ubuntu1804
 
+  - job_name: macOS_x64
+    appveyor_build_worker_image: macos
+
 configuration:
   - Release
 
@@ -28,21 +31,24 @@ for:
       - set PATH=%PATH%;%QTDIR%\bin;C:\Qt\5.15\msvc2019_64\bin
       - call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars64.bat"
     build_script:
+      - if not exist Cmpl-2-0-win.zip appveyor DownloadFile http://www.coliop.org/_download/Cmpl-2-0-win.zip
+      - 7z x Cmpl-2-0-win.zip
+      - cd Cmpl-2-0-win
+      - attrib -r -s -h /S /D
+      - cd ..
       - ps: $env:VERSION_STRING = $(git describe --always --dirty=dev)
       - echo .pragma library > src\qml\version.js
       - echo var VERSION_STRING = "%VERSION_STRING%"; >> src\qml\version.js
       - qmake OverlayPal.pro -spec win32-msvc "CONFIG+=qtquickcompiler"
       - nmake
     after_build:
-      - if not exist Cmpl-2-0-win.zip appveyor DownloadFile http://www.coliop.org/_download/Cmpl-2-0-win.zip
       - mkdir OverlayPal-%VERSION_STRING%-win64-%CONFIGURATION%
       - cd OverlayPal-%VERSION_STRING%-win64-%CONFIGURATION%
       - copy ..\LICENSE .\
       - copy ..\release\OverlayPal.exe
-      - xcopy ..\nespalettes nespalettes\
-      - copy ..\src\cmpl\*.cmpl .\
-      - 7z x ..\Cmpl-2-0-win.zip
-      - rename Cmpl-2-0-win Cmpl
+      - xcopy ..\release\nespalettes nespalettes\
+      - copy ..\release\*.cmpl .\
+      - xcopy /s /i ..\release\Cmpl Cmpl\
       - windeployqt.exe --qmldir ..\src\qml OverlayPal.exe
       - cd ..
       - ps: 7z a OverlayPal-$env:VERSION_STRING-win64-$env:CONFIGURATION.zip OverlayPal-$env:VERSION_STRING-win64-$env:CONFIGURATION
@@ -63,21 +69,51 @@ for:
       - sh: sudo apt update
       - sh: sudo apt install -y libgl1-mesa-dev
     build_script:
+      - if ! [ -f Cmpl-2-0-linux64.tar.gz ]; then appveyor DownloadFile http://www.coliop.org/_download/Cmpl-2-0-linux64.tar.gz; fi
+      - tar -xvf Cmpl-2-0-linux64.tar.gz
       - VERSION_STRING=$(git describe --always --dirty=dev)
-      - echo ".pragma library" > src\qml\version.js
-      - echo "var VERSION_STRING = \"${VERSION_STRING}\";" >> src\qml\version.js
+      - echo ".pragma library" > src/qml/version.js
+      - echo "var VERSION_STRING = \"${VERSION_STRING}\";" >> src/qml/version.js
       - qmake OverlayPal.pro "CONFIG+=qtquickcompiler"
       - make
     after_build:
-      - if ! [ -f Cmpl-2-0-linux64.tar.gz ]; then appveyor DownloadFile http://www.coliop.org/_download/Cmpl-2-0-linux64.tar.gz; fi
       - mkdir OverlayPal-${VERSION_STRING}-linux_x64-${CONFIGURATION}
       - cd OverlayPal-${VERSION_STRING}-linux_x64-${CONFIGURATION}
       - cp ../LICENSE ./
       - cp ../OverlayPal ./
       - cp -r ../nespalettes ./
-      - cp ../src/cmpl/*.cmpl ./
-      - tar -xvf ../Cmpl-2-0-linux64.tar.gz
-      - mv Cmpl-2-0-linux64 Cmpl
+      - cp ../*.cmpl ./
+      - cp -r ../Cmpl ./
       - cd ..
       - tar -czvf OverlayPal-${VERSION_STRING}-linux_x64-${CONFIGURATION}.tar.gz OverlayPal-${VERSION_STRING}-linux_x64-${CONFIGURATION}
       - appveyor PushArtifact OverlayPal-${VERSION_STRING}-linux_x64-${CONFIGURATION}.tar.gz
+
+# macOS (x64)
+
+  -
+    matrix:
+      only:
+        - job_name: macOS_x64
+    cache:
+    - Cmpl-2-0-macOs-Intel.zip
+
+    install:
+      - PATH=$HOME/Qt/5.15.2/clang_64/bin:$PATH
+    build_script:
+      - VERSION_STRING=$(git describe --always --dirty=dev)
+      - mkdir OverlayPal-${VERSION_STRING}-macOS_x64-${CONFIGURATION}
+      - if ! [ -f http://www.coliop.org/_download/Cmpl-2-0-macOs-Intel.zip ]; then appveyor DownloadFile http://www.coliop.org/_download/Cmpl-2-0-macOs-Intel.zip; fi
+      - unzip Cmpl-2-0-macOs-Intel.zip
+      - echo ".pragma library" > src/qml/version.js
+      - echo "var VERSION_STRING = \"${VERSION_STRING}\";" >> src/qml/version.js
+      - qmake OverlayPal.pro "CONFIG+=qtquickcompiler"
+      - make
+    after_build:
+      - cd OverlayPal-${VERSION_STRING}-macOS_x64-${CONFIGURATION}
+      - cp ../LICENSE ./
+      - cp -r ../OverlayPal.app ./
+      - macdeployqt OverlayPal.app -qmldir=../src/qml
+      - cd ..
+      - tar -czvf OverlayPal-${VERSION_STRING}-macOS_x64-${CONFIGURATION}.tar.gz OverlayPal-${VERSION_STRING}-macOS_x64-${CONFIGURATION}
+      - appveyor PushArtifact OverlayPal-${VERSION_STRING}-macOS_x64-${CONFIGURATION}.tar.gz
+
