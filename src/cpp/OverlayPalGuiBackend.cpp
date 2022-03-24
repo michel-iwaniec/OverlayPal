@@ -105,12 +105,12 @@ OverlayPalGuiBackend::OverlayPalGuiBackend(QObject *parent):
     std::string executablePath = QCoreApplication::applicationDirPath().toStdString();
     mOverlayOptimiser.setExecutablePath(executablePath);
 
-#ifdef Q_OS_MACX
-    // On MacOS, use a separate Qt-provided directory for temporary data files
+#ifndef _WIN32
+    // On MacOS and GNU/Linux, use a separate Qt-provided directory for temporary data files
     QString pathToTmp = qApp->appStoragePath();
     mOverlayOptimiser.setWorkPath(pathToTmp.toStdString());
 #else
-    // On Windows (and GNU/Linux), put temporary data files in Cmpl/bin.
+    // On Windows, put temporary data files in Cmpl/bin.
     // This is to sidestep a weird CMPL2-bug, which prevents CMPL2 from
     // locating files when CMPL2 is running as a subprocess.
     // TODO: Investigate root cause of this bug.
