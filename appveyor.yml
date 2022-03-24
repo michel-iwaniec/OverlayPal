@@ -63,6 +63,7 @@ for:
         - job_name: linux_x64
     cache:
     - Cmpl-2-0-linux64.tar.gz
+    - linuxdeployqt-continuous-x86_64.AppImage
 
     install:
       - PATH=$HOME/Qt/5.15/gcc_64/bin:$PATH
@@ -70,6 +71,8 @@ for:
       - sh: sudo apt install -y libgl1-mesa-dev
     build_script:
       - if ! [ -f Cmpl-2-0-linux64.tar.gz ]; then appveyor DownloadFile http://www.coliop.org/_download/Cmpl-2-0-linux64.tar.gz; fi
+      - if ! [ -f linuxdeployqt-continuous-x86_64.AppImage ]; then appveyor DownloadFile https://github.com/probonopd/linuxdeployqt/releases/download/continuous/linuxdeployqt-continuous-x86_64.AppImage; fi
+      - chmod ugo+x linuxdeployqt-continuous-x86_64.AppImage
       - tar -xvf Cmpl-2-0-linux64.tar.gz
       - VERSION_STRING=$(git describe --always --dirty=dev)
       - echo ".pragma library" > src/qml/version.js
@@ -78,12 +81,15 @@ for:
       - make
     after_build:
       - mkdir OverlayPal-${VERSION_STRING}-linux_x64-${CONFIGURATION}
+      - cp -r AppDir OverlayPal-${VERSION_STRING}-linux_x64-${CONFIGURATION}/
       - cd OverlayPal-${VERSION_STRING}-linux_x64-${CONFIGURATION}
-      - cp ../LICENSE ./
-      - cp ../OverlayPal ./
-      - cp -r ../nespalettes ./
-      - cp ../*.cmpl ./
-      - cp -r ../Cmpl ./
+      - cp ../LICENSE ./AppDir/
+      - mkdir -p ./AppDir/usr/bin
+      - cp ../OverlayPal ./AppDir/usr/bin/
+      - cp -r ../nespalettes ./AppDir/usr/bin/
+      - cp ../*.cmpl ./AppDir/usr/bin/
+      - cp -r ../Cmpl ./AppDir/usr/bin/
+      - ../linuxdeployqt-continuous-x86_64.AppImage AppDir/usr/share/applications/OverlayPal.desktop -qmldir=../src/qml -ignore-glob=usr/bin/Cmpl/**
       - cd ..
       - tar -czvf OverlayPal-${VERSION_STRING}-linux_x64-${CONFIGURATION}.tar.gz OverlayPal-${VERSION_STRING}-linux_x64-${CONFIGURATION}
       - appveyor PushArtifact OverlayPal-${VERSION_STRING}-linux_x64-${CONFIGURATION}.tar.gz

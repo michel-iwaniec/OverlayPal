@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=OverlayPal
+Comment=OverlayPal NES image converter
+Exec=OverlayPal
+Icon=OverlayPal
+Categories=Graphics;
