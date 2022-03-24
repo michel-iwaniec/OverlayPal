@@ -44,15 +44,17 @@ constraints:
     }
 
     # Constraints ensuring that a color must be in one-and-only-one of BG or overlay
-    `color_InEitherBGorOverlay_ { x in XRANGE, y in YRANGE:
-        colorsBG[x, y, COLORS] + colorsOverlay[x, y, COLORS] = layerColors[x, y, COLORS];
+    `color_InEitherBGorOverlay_ { x in XRANGE, y in YRANGE, c in COLORS:
+        colorsBG[x, y, c] + colorsOverlay[x, y, c] = layerColors[x, y, c];
     }
 
     # Constraints for occupancy (logical OR between all colors in colorsOverlay, reformulated in LP)
-    `occupancy_ { x in XRANGE, y in YRANGE:
-        `_gtColorsOverlay occupancy[x, y] >= colorsOverlay[x, y, COLORS];
+    `occupancy_lt { x in XRANGE, y in YRANGE:
         `_lt1 occupancy[x, y] <= 1;
         `_ltSUM occupancy[x, y] <= sum{ c in COLORS: colorsOverlay[x, y, c] };
+    }
+    `occupancy_gt { x in XRANGE, y in YRANGE, c in COLORS:
+        `_gtColorsOverlay occupancy[x, y] >= colorsOverlay[x, y, c];
     }
 
     # Constraints to prevent each row to have more active overlay cells above limit (approximates sprites / scanline limit)
@@ -78,8 +80,8 @@ constraints:
         sum{ c in COLORS: colorsOverlayTotal[c] } <= MAX_COLORS_OVERLAY;
 
     # Constraint for colors-subset-of-palette
-    `colorsBGmustBeSubsetOfPalette_ { x in XRANGE, y in YRANGE, p in BG_PALETTES:
-        usesPaletteBG[x, y, p] * colorsBG[x, y, COLORS] <= palettesBG[p, COLORS];
+    `colorsBGmustBeSubsetOfPalette_ { x in XRANGE, y in YRANGE, p in BG_PALETTES, c in COLORS:
+        usesPaletteBG[x, y, p] * colorsBG[x, y, c] <= palettesBG[p, c];
     }
 
     # Constraint to ensure that every BG cell's set of colors are a subset of some palette's colors
