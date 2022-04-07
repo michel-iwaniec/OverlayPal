@@ -31,9 +31,9 @@ for:
       - set PATH=%PATH%;%QTDIR%\bin;C:\Qt\5.15\msvc2019_64\bin
       - call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars64.bat"
     build_script:
-      - if not exist Cmpl-2-0-win.zip appveyor DownloadFile http://www.coliop.org/_download/Cmpl-2-0-win.zip
-      - 7z x Cmpl-2-0-win.zip
-      - cd Cmpl-2-0-win
+      - if not exist Cmpl-2-0-1-win.zip appveyor DownloadFile http://www.coliop.org/_download/Cmpl-2-0-1-win.zip
+      - 7z x Cmpl-2-0-1-win.zip
+      - cd Cmpl-2-0-1-win
       - attrib -r -s -h /S /D
       - cd ..
       - ps: $env:VERSION_STRING = $(git describe --always --dirty=dev)
@@ -70,10 +70,10 @@ for:
       - sh: sudo apt update
       - sh: sudo apt install -y libgl1-mesa-dev
     build_script:
-      - if ! [ -f Cmpl-2-0-linux64.tar.gz ]; then appveyor DownloadFile http://www.coliop.org/_download/Cmpl-2-0-linux64.tar.gz; fi
+      - if ! [ -f Cmpl-2-0-1-linux64.tar.gz ]; then appveyor DownloadFile http://www.coliop.org/_download/Cmpl-2-0-1-linux64.tar.gz; fi
       - if ! [ -f linuxdeployqt-continuous-x86_64.AppImage ]; then appveyor DownloadFile https://github.com/probonopd/linuxdeployqt/releases/download/continuous/linuxdeployqt-continuous-x86_64.AppImage; fi
       - chmod ugo+x linuxdeployqt-continuous-x86_64.AppImage
-      - tar -xvf Cmpl-2-0-linux64.tar.gz
+      - tar -xvf Cmpl-2-0-1-linux64.tar.gz
       - VERSION_STRING=$(git describe --always --dirty=dev)
       - echo ".pragma library" > src/qml/version.js
       - echo "var VERSION_STRING = \"${VERSION_STRING}\";" >> src/qml/version.js
@@ -108,8 +108,8 @@ for:
     build_script:
       - VERSION_STRING=$(git describe --always --dirty=dev)
       - mkdir OverlayPal-${VERSION_STRING}-macOS_x64-${CONFIGURATION}
-      - if ! [ -f http://www.coliop.org/_download/Cmpl-2-0-macOs-Intel.zip ]; then appveyor DownloadFile http://www.coliop.org/_download/Cmpl-2-0-macOs-Intel.zip; fi
-      - unzip Cmpl-2-0-macOs-Intel.zip
+      - if ! [ -f Cmpl-2-0-1-macOs-Intel.zip ]; then appveyor DownloadFile http://www.coliop.org/_download/Cmpl-2-0-1-macOs-Intel.zip; fi
+      - unzip Cmpl-2-0-1-macOs-Intel.zip
       - echo ".pragma library" > src/qml/version.js
       - echo "var VERSION_STRING = \"${VERSION_STRING}\";" >> src/qml/version.js
       - qmake OverlayPal.pro "CONFIG+=qtquickcompiler"

@@ -71,7 +71,7 @@ macx {
     QMAKE_BUNDLE_DATA += CMPL_FILES
     contains(OVERLAYPAL_FEATURES, copy_cmpl) {
         # copy cmpl
-        CMPL_BIN_FILES.files = $$files($$PWD/Cmpl-2-0-macOs-Intel/Cmpl2/Coliop.app/Contents/MacOS/*)
+        CMPL_BIN_FILES.files = $$files($$PWD/Cmpl-2-0-1-macOs-Intel/Cmpl2/Coliop.app/Contents/MacOS/*)
         CMPL_BIN_FILES.path = Contents/MacOS/Cmpl
         QMAKE_BUNDLE_DATA += CMPL_BIN_FILES
     }
@@ -87,7 +87,7 @@ unix:!macx {
     QMAKE_POST_LINK += $$QMAKE_COPY_FILE $$shell_quote($$PWD/src/cmpl/SecondPass.cmpl) $$shell_quote($$OUT_PWD/SecondPass.cmpl) $$escape_expand(\\n\\t)
     # Conditionally copy entire cmpl directory only if copy_cmpl is set
     contains(OVERLAYPAL_FEATURES, copy_cmpl) {
-        QMAKE_POST_LINK += $$QMAKE_COPY_DIR $$shell_quote($$PWD/Cmpl-2-0-linux64) $$shell_quote($$OUT_PWD/Cmpl) $$escape_expand(\\n\\t)
+        QMAKE_POST_LINK += $$QMAKE_COPY_DIR $$shell_quote($$PWD/Cmpl-2-0-1-linux64) $$shell_quote($$OUT_PWD/Cmpl) $$escape_expand(\\n\\t)
     }
 }
 
@@ -109,6 +109,6 @@ win32 {
     QMAKE_POST_LINK += $$QMAKE_COPY_FILE $$shell_quote($$PWD_WIN\\src\\cmpl\\SecondPass.cmpl) $$shell_quote($$OUT_PWD_WIN\\SecondPass.cmpl) $$escape_expand(\\n\\t)
     # Conditionally copy entire cmpl directory only if copy_cmpl is set
     contains(OVERLAYPAL_FEATURES, copy_cmpl) {
-        QMAKE_POST_LINK += $$QMAKE_COPY_DIR $$shell_quote($$PWD_WIN\\Cmpl-2-0-win) $$shell_quote($$OUT_PWD_WIN\\Cmpl) $$escape_expand(\\n\\t)
+        QMAKE_POST_LINK += $$QMAKE_COPY_DIR $$shell_quote($$PWD_WIN\\Cmpl-2-0-1-win) $$shell_quote($$OUT_PWD_WIN\\Cmpl) $$escape_expand(\\n\\t)
     }
 }
