@@ -74,6 +74,12 @@ for:
       - if ! [ -f linuxdeployqt-continuous-x86_64.AppImage ]; then appveyor DownloadFile https://github.com/probonopd/linuxdeployqt/releases/download/continuous/linuxdeployqt-continuous-x86_64.AppImage; fi
       - chmod ugo+x linuxdeployqt-continuous-x86_64.AppImage
       - tar -xvf Cmpl-2-0-1-linux64.tar.gz
+      - git clone https://github.com/MikeSteglich/Cmpl2.git
+      - cd Cmpl2
+      - git checkout a54a075092192e56450956ac82e722588d1bde96
+      - make
+      - cd ..
+      - cp Cmpl2/bin/cmpl Cmpl-2-0-1-linux64/bin/
       - VERSION_STRING=$(git describe --always --dirty=dev)
       - echo ".pragma library" > src/qml/version.js
       - echo "var VERSION_STRING = \"${VERSION_STRING}\";" >> src/qml/version.js
