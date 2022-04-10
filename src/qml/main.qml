@@ -70,6 +70,24 @@ Window {
         uiInteractionRow.scale = uiScale;
     }
 
+    DropArea {
+        id: dropArea;
+        anchors.fill: parent
+        onEntered: (drag) => {
+            if(drag.hasUrls && drag.urls.length === 1)
+            {
+                drag.accepted = true;
+            }
+            else
+            {
+                drag.accepted = false;
+            }
+        }
+        onDropped: (drop) => {
+            loadImage(drop.urls[0]);
+        }
+    }
+
     OverlayPalGuiBackend {
         id: optimiser
         shiftX: 0
@@ -1015,17 +1033,8 @@ Window {
             nameFilters: ["Image files (*.png *.bmp *.gif)"]
             selectExisting: true
             onAccepted: {
-                visible = false
-                var imageError = optimiser.validateInputImage(fileUrls[0]);
-                if(imageError === "")
-                {
-                    optimiser.inputImageFilename = fileUrls[0];
-                    saveGroupBox.enabled = true;
-                }
-                else
-                {
-                    invalidImageMessageDialog.visible = true;
-                }
+                visible = false;
+                loadImage(fileUrls[0]);
             }
             onRejected: {
                 visible = false
@@ -1074,6 +1083,20 @@ Window {
             {
                 visible = true
             }
+        }
+    }
+    // Load image from supplied filename
+    function loadImage(filename)
+    {
+        var imageError = optimiser.validateInputImage(filename);
+        if(imageError === "")
+        {
+            optimiser.inputImageFilename = filename;
+            saveGroupBox.enabled = true;
+        }
+        else
+        {
+            invalidImageMessageDialog.visible = true;
         }
     }
     // Get mask to apply to save PNG/export
