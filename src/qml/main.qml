@@ -480,12 +480,13 @@ Window {
                     SpinBox {
                         id: xShiftSpinBox
                         x: 40
-                        to: 15
+                        to: 255
                         value: 0
                         leftPadding: 46
                         transformOrigin: Item.Center
                         Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
                         onValueChanged: optimiser.shiftX = value
+                        editable: true
                     }
 
                     Label {
@@ -503,10 +504,11 @@ Window {
                     SpinBox {
                         id: yShiftSpinBox
                         x: 40
-                        to: 15
+                        to: 239
                         value: 0
                         Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
                         onValueChanged: optimiser.shiftY = value
+                        editable: true
                     }
                 }
 
