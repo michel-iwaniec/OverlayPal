@@ -609,6 +609,12 @@ std::string OverlayOptimiser::convert(const Image2D& image,
                                            paletteIndicesBackground);
     if(!successPassOne)
         return "First pass failed.";
+    // Optimize easily-fixable bad cases that originate from solver getting timed out
+    optimizeUnnecessaryOverlayColors(layerBackground,
+                                     layerOverlay,
+                                     paletteIndicesBackground,
+                                     0,
+                                     palettes);
     // Split image into background and overlay
     moveOverlayColors(image, imageBackground, imageOverlay, layerOverlay, backgroundColor);
     optimizeContinuity(layerBackground, paletteIndicesBackground, 0, palettes, backgroundColor);
@@ -650,6 +656,12 @@ std::string OverlayOptimiser::convert(const Image2D& image,
                                             paletteIndicesOverlay);
     if(!successPassTwo)
         throw Error("Second pass failed.");
+    // Optimize easily-fixable bad cases that originate from solver getting timed out
+    optimizeUnnecessaryOverlayColors(layerOverlayGrid,
+                                     layerOverlayFree,
+                                     paletteIndicesOverlay,
+                                     NumBackgroundPalettes,
+                                     palettes);
     moveOverlayColors(imageOverlay, imageOverlayGrid, imageOverlayFree, layerOverlayFree, backgroundColor);
     optimizeContinuity(layerOverlayGrid, paletteIndicesOverlay, NumBackgroundPalettes, palettes, backgroundColor);
     assert(consistentLayers(imageOverlayGrid, layerOverlayGrid, palettes, paletteIndicesOverlay, backgroundColor));

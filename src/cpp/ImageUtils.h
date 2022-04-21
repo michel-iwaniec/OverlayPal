@@ -41,4 +41,17 @@ Image2D shiftImageOptimal(const Image2D& image2D, uint8_t backgroundColor, int c
 //
 void optimizeContinuity(const GridLayer& layer, Array2D<uint8_t>& paletteIndices, uint8_t paletteIndicesOffset, const std::vector<std::set<uint8_t>>& palettes, uint8_t backgroundColor);
 
+//
+// Move overlay colors back to background where possible, changing the palette index
+// of the background cell if needed.
+//
+// Reasons for this function is when CBC stops on a timeout. The best-solution-so-far
+// found can sometimes have obvious suboptimal results that are easy to undo here.
+//
+void optimizeUnnecessaryOverlayColors(GridLayer& layerBackground,
+                                      GridLayer& layerOverlay,
+                                      Array2D<uint8_t>& paletteIndices,
+                                      uint8_t paletteIndicesOffset,
+                                      const std::vector<Colors>& palettes);
+
 #endif // IMAGE_UTILS_H
