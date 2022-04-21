@@ -595,8 +595,8 @@ std::string OverlayOptimiser::convert(const Image2D& image,
     mLayerOverlayFree = blankLayer;
     mPaletteIndicesBackground = paletteIndicesBackground;
     mPaletteIndicesOverlay = paletteIndicesOverlay;
-    // * 2 to always get a visible solution, even if beyond constraints
-    int maxRowSize = ((2 * spriteWidth()) / gridCellWidth) * maxSpritesPerScanline;
+    // * 4 to always get a visible solution, even if beyond constraints
+    int maxRowSize = ((4 * spriteWidth()) / gridCellWidth) * maxSpritesPerScanline;
     // Execute first pass
     std::vector<std::set<uint8_t>> palettes;
     bool successPassOne = convertFirstPass(image,
@@ -650,7 +650,7 @@ std::string OverlayOptimiser::convert(const Image2D& image,
     // Second pass
     bool successPassTwo = convertSecondPass(gridCellColorLimit,
                                             maxSpritePalettes,
-                                            2 * maxSpritesPerScanline,
+                                            4 * maxSpritesPerScanline,
                                             timeOut,
                                             layerOverlay,
                                             layerOverlayGrid,
