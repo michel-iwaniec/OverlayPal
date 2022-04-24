@@ -82,7 +82,8 @@ int executeProcess(std::string exeFilename,
                         &pi ))
     {
         // Wait until process is finished - but no longer than 10x timeOut value
-        int timeOutMs = 1000 * timeOut;
+        // Or a ridiculously long time if timeOut is 0 (=disabled)
+        int timeOutMs = timeOut ? 1000 * timeOut : 200000000;
         uint32_t eventType = WaitForSingleObject(pi.hProcess, 10 * timeOutMs);
         if(eventType == WAIT_OBJECT_0)
         {
