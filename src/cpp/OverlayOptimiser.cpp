@@ -133,7 +133,10 @@ void OverlayOptimiser::runCmplProgram(const std::string& inputFilename,
                               std::istreambuf_iterator<char>());
     inputFile.close();
     std::ofstream outputFile(outputFilename);
-    outputFile << "%opt cbc seconds " << timeOut << "\n";
+    if(timeOut)
+    {
+        outputFile << "%opt cbc seconds " << timeOut << "\n";
+    }
     outputFile << inputFileStr;
     outputFile.close();
     // Execute process
