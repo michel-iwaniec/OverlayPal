@@ -185,3 +185,42 @@ void optimizeContinuity(const GridLayer& layer,
         }
     }
 }
+
+//---------------------------------------------------------------------------------------------------------------------
+
+void optimizeUnnecessaryOverlayColors(GridLayer& layerBackground,
+                                      GridLayer& layerOverlay,
+                                      Array2D<uint8_t>& paletteIndices,
+                                      uint8_t paletteIndicesOffset,
+                                      const std::vector<Colors>& palettes)
+{
+    assert(layerOverlay.width() == layerBackground.width());
+    assert(layerOverlay.height() == layerBackground.height());
+    assert(paletteIndices.width() == layerBackground.width());
+    assert(paletteIndices.height() == layerBackground.height());
+    assert(paletteIndicesOffset < palettes.size());
+    for(size_t y = 0; y < layerBackground.height(); y++)
+    {
+        for(size_t x = 0; x < layerBackground.width(); x++)
+        {
+            Colors& colorsBackground = layerBackground(x, y).colors;
+            Colors& colorsOverlay = layerOverlay(x, y).colors;
+            // Get union
+            Colors colorsAll = colorsBackground;
+            colorsAll.insert(colorsOverlay.begin(), colorsOverlay.end());
+            // If any palette is a superset of all colors, use it and
+            // move colors into background layer
+            for(size_t i = paletteIndicesOffset; i < palettes.size(); i++)
+            {
+                const Colors& paletteColors = palettes[i];
+                if(isSubSet(colorsAll, paletteColors))
+                {
+                    colorsBackground = colorsAll;
+                    colorsOverlay.clear();
+                    paletteIndices(x, y) = i;
+                    break;
+                }
+            }
+        }
+    }
+}
