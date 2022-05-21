@@ -160,7 +160,7 @@ protected:
                            std::vector<std::set<uint8_t>>& palettes,
                            Array2D<uint8_t>& paletteIndicesBackground);
 
-    void fillMissingPaletteGroups(std::vector<std::set<uint8_t>>& palettes);
+    void fillMissingPaletteGroups(std::vector<std::set<uint8_t>>& palettes, size_t numPalettes);
 
     Sprite extractSpriteWithBestPalette(Image2D& overlayImage, size_t x, size_t y, size_t spriteWidth, size_t spriteHeight, bool removePixels) const;
 

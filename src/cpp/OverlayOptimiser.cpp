@@ -402,9 +402,9 @@ bool OverlayOptimiser::consistentLayers(const Image2D& image, const GridLayer& l
 
 //---------------------------------------------------------------------------------------------------------------------
 
-void OverlayOptimiser::fillMissingPaletteGroups(std::vector<std::set<uint8_t>>& palettes)
+void OverlayOptimiser::fillMissingPaletteGroups(std::vector<std::set<uint8_t>>& palettes, size_t numPalettes)
 {
-    while(palettes.size() < 4)
+    while(palettes.size() < numPalettes)
     {
         palettes.push_back(std::set<uint8_t>());
     }
@@ -436,7 +436,6 @@ bool OverlayOptimiser::convertFirstPassNoBG(int gridCellColorLimit,
         }
         maxCellsInRow = std::max(maxCellsInRow, numCellsInRow);
     }
-    fillMissingPaletteGroups(palettesBG);
     setEmptyPaletteIndices(paletteIndicesBackground, layerBackground, 0);
     const int maxColorsOverlay = maxSpritePalettes * gridCellColorLimit;
     return colors.size() <= maxColorsOverlay && maxCellsInRow <= maxRowSize;
@@ -496,7 +495,6 @@ bool OverlayOptimiser::convertFirstPass(const Image2D& image,
     {
         throw Error("Failed to parse CMPL result (first pass)");
     }
-    fillMissingPaletteGroups(palettesBG);
     setEmptyPaletteIndices(paletteIndicesBackground, layerBackground, 0);
     return true;
 }
@@ -534,7 +532,6 @@ bool OverlayOptimiser::convertSecondPass(int gridCellColorLimit,
     {
         throw Error("Failed to parse CMPL result (second pass)");
     }
-    fillMissingPaletteGroups(palettesSPR);
     setEmptyPaletteIndices(paletteIndicesOverlay, layerOverlayGrid, NumBackgroundPalettes);
     for(const std::set<uint8_t>& palette : palettesSPR)
     {
@@ -618,6 +615,12 @@ std::string OverlayOptimiser::convert(const Image2D& image,
                                      paletteIndicesBackground,
                                      0,
                                      palettes);
+    // Merge palettes when possible
+    optimizeUnnecessaryPalettes(paletteIndicesBackground,
+                                0,
+                                palettes,
+                                gridCellColorLimit);
+    fillMissingPaletteGroups(palettes, NumBackgroundPalettes);
     // Split image into background and overlay
     moveOverlayColors(image, imageBackground, imageOverlay, layerOverlay, backgroundColor);
     optimizeContinuity(layerBackground, paletteIndicesBackground, 0, palettes, backgroundColor);
@@ -665,6 +668,12 @@ std::string OverlayOptimiser::convert(const Image2D& image,
                                      paletteIndicesOverlay,
                                      NumBackgroundPalettes,
                                      palettes);
+    // Merge palettes when possible
+    optimizeUnnecessaryPalettes(paletteIndicesOverlay,
+                                NumBackgroundPalettes,
+                                palettes,
+                                gridCellColorLimit);
+    fillMissingPaletteGroups(palettes, NumBackgroundPalettes+NumSpritePalettes);
     moveOverlayColors(imageOverlay, imageOverlayGrid, imageOverlayFree, layerOverlayFree, backgroundColor);
     optimizeContinuity(layerOverlayGrid, paletteIndicesOverlay, NumBackgroundPalettes, palettes, backgroundColor);
     assert(consistentLayers(imageOverlayGrid, layerOverlayGrid, palettes, paletteIndicesOverlay, backgroundColor));
