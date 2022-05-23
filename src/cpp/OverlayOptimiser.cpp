@@ -482,10 +482,10 @@ bool OverlayOptimiser::convertFirstPass(const Image2D& image,
                       maxRowSize,
                       workPathFilename(firstPassDataFilename));
     //
-    runCmplProgram(exePathFilename(firstPassProgramInputFilename),
-                   workPathFilename(firstPassProgramOutputFilename),
-                   workPathFilename(firstPassSolutionFilename),
-                   timeOut);
+    //runCmplProgram(exePathFilename(firstPassProgramInputFilename),
+    //               workPathFilename(firstPassProgramOutputFilename),
+    //               workPathFilename(firstPassSolutionFilename),
+    //               timeOut);
     if(!parseCmplSolution(workPathFilename(firstPassSolutionFilename),
                           palettesBG,
                           layerBackground,
@@ -518,10 +518,10 @@ bool OverlayOptimiser::convertSecondPass(int gridCellColorLimit,
                       2 * maxSpritesPerScanline,
                       workPathFilename(secondPassDataFilename));
     //
-    runCmplProgram(exePathFilename(secondPassProgramInputFilename),
-                   workPathFilename(secondPassProgramOutputFilename),
-                   workPathFilename(secondPassSolutionFilename),
-                   timeOut);
+    //runCmplProgram(exePathFilename(secondPassProgramInputFilename),
+    //               workPathFilename(secondPassProgramOutputFilename),
+    //               workPathFilename(secondPassSolutionFilename),
+    //               timeOut);
     std::vector<std::set<uint8_t>> palettesSPR;
     if(!parseCmplSolution(workPathFilename(secondPassSolutionFilename),
                           palettesSPR,
@@ -564,7 +564,7 @@ std::string OverlayOptimiser::convert(const Image2D& image,
     };
     for(const char* filename : filenames)
     {
-        remove(workPathFilename(filename).c_str());
+        //remove(workPathFilename(filename).c_str());
     }
     mBackgroundColor = backgroundColor;
     mSpriteHeight = _spriteHeight;
