@@ -224,3 +224,62 @@ void optimizeUnnecessaryOverlayColors(GridLayer& layerBackground,
         }
     }
 }
+
+//---------------------------------------------------------------------------------------------------------------------
+
+static void replacePaletteIndices(Array2D<uint8_t>& paletteIndices, uint8_t oldIndex, uint8_t newIndex)
+{
+    for(size_t y = 0; y < paletteIndices.height(); y++)
+    {
+        for(size_t x = 0; x < paletteIndices.width(); x++)
+        {
+            if(paletteIndices(x, y) == oldIndex)
+            {
+                paletteIndices(x, y) = newIndex;
+            }
+        }
+    }
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+
+static void removePalette(Array2D<uint8_t>& paletteIndices, std::vector<Colors>& palettes, uint8_t index)
+{
+    for(uint8_t i = index + 1; i < palettes.size(); i++)
+    {
+        replacePaletteIndices(paletteIndices, i, i - 1);
+    }
+    palettes.erase(palettes.begin() + index);
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+
+void optimizeUnnecessaryPalettes(Array2D<uint8_t>& paletteIndices,
+                                 uint8_t paletteIndicesOffset,
+                                 std::vector<Colors>& palettes,
+                                 size_t maxColors)
+{
+    assert(paletteIndicesOffset < palettes.size());
+    for(uint8_t i = paletteIndicesOffset; i < palettes.size(); i++)
+    {
+        Colors& colorsI = palettes[i];
+        for(uint8_t j = i + 1; j < palettes.size();)
+        {
+            Colors& colorsJ = palettes[j];
+            Colors colorsAll = colorsI;
+            colorsAll.insert(colorsJ.begin(), colorsJ.end());
+            if(colorsAll.size() <= maxColors)
+            {
+                // Replace i with merged colors, and remove j completely
+                palettes[i] = colorsAll;
+                replacePaletteIndices(paletteIndices, j, i);
+                removePalette(paletteIndices, palettes, j);
+            }
+            else
+            {
+                j++;
+            }
+        }
+    }
+}
+

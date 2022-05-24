@@ -54,4 +54,12 @@ void optimizeUnnecessaryOverlayColors(GridLayer& layerBackground,
                                       uint8_t paletteIndicesOffset,
                                       const std::vector<Colors>& palettes);
 
+//
+// Optimize unnecessary palettes by identifying and merging two palettes that could fit into one
+//
+void optimizeUnnecessaryPalettes(Array2D<uint8_t>& paletteIndices,
+                                 uint8_t paletteIndicesOffset,
+                                 std::vector<Colors>& palettes,
+                                 size_t maxColors);
+
 #endif // IMAGE_UTILS_H
