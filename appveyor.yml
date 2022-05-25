@@ -49,6 +49,23 @@ for:
       - xcopy ..\release\nespalettes nespalettes\
       - copy ..\release\*.cmpl .\
       - xcopy /s /i ..\release\Cmpl Cmpl\
+      - rmdir /s /q Cmpl\bin\iconengines
+      - rmdir /s /q Cmpl\bin\imageformats
+      - rmdir /s /q Cmpl\bin\platforms
+      - rmdir /s /q Cmpl\bin\printsupport
+      - rmdir /s /q Cmpl\bin\styles
+      - rmdir /s /q Cmpl\bin\translations
+      - rmdir /s /q Cmpl\bin\cmplServer
+      - del Cmpl\bin\cmplServer.opt
+      - del Cmpl\bin\cmplStarter.py
+      - del Cmpl\bin\gurobiCmpl.*
+      - del Cmpl\bin\manual.bat
+      - del Cmpl\bin\coliop.exe
+      - del Cmpl\bin\Qt*.dll
+      - del Cmpl\bin\opengl32sw.dll
+      - del Cmpl\bin\libGLESv2.dll
+      - del Cmpl\bin\libEGL.dll
+      - del Cmpl\bin\D3Dcompiler_47.dll
       - windeployqt.exe --qmldir ..\src\qml OverlayPal.exe
       - cd ..
       - ps: 7z a OverlayPal-$env:VERSION_STRING-win64-$env:CONFIGURATION.zip OverlayPal-$env:VERSION_STRING-win64-$env:CONFIGURATION
