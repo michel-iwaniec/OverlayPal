@@ -23,13 +23,13 @@ This mode - geared towards games with a scrolling level and individual game obje
 
 Both the background and sprites use only a 2-bit color depth, with additional color depth achieved by using aforementioned palettes. These restrictions make colorful pixel art seen on other platforms a challenge to pull off on the NES.
 
-The most colorful full-screen art in the history of the NES tended to used a carefully designed combinations of sprites overlaid on top of background in order to bypass the 3-colors + background limit and simulate more colors.
+The most colorful full-screen art in the history of the NES tended to use a carefully designed combination of sprites overlaid on top of a background, in order to bypass the 4-color limitation and achieve more colors.
 
-A dedicated artist who carefully crafts a background with sprite overlay design from the bottom-up - with these limitations in mind - will always achieve the best results. 
+A dedicated artist who carefully crafts a background with sprite overlays - with these limitations in mind - will always achieve the best results. 
 
-But OverlayPal intends to provide an alternative automated top-down method, which takes an arbitrary image and attempts to find a way to partition and duplicate the colors into background and sprite palettes that fits the limitations. Hopefully making the process easier to visualise for artists new to the color quirks of the NES. 
+But OverlayPal intends to provide an alternative automated top-down method, which takes an arbitrary image and attempts to find a way to partition and duplicate the colors into background and sprite palettes that fit the limitations. Hopefully making the process easier to visualise for artists new to the color quirks of the NES. 
 
-OverlayPal utilises of the CMPL language and CBC library for mathematical modelling / solving to search the large solution space of color combinations effectively.
+OverlayPal utilises the CMPL language / compiler and the CBC library for mathematical modelling / solving, in order to search the large solution space of color combinations effectively.
 
 Besides being an automated conversion flow, OverlayPal also provides multiple debugging views for showing the converted image. These can highlight where the problematic areas occur, allowing artists to fix these problematic areas with minor tweaks that are unlikely to be noticed.
 
@@ -40,36 +40,40 @@ Images loaded can be of two types:
 1. RGB images. These will be remapped into the NES's 52 colors using a pre-selected color mapping.
 2. Indexed-color images, where each color directly represents one of the possible 52 colors the NES can display.
 
-Because the NES Picture Processing Unit generates all its video in the NTSC color space, there is no definite RGB palette. The color could vary significantly  across different TV sets. And the after-market world of emulation shows an equal variation of RGB palette flavors.
+Because the NES Picture Processing Unit generates all its video in the NTSC color space, there is no definite RGB palette. The color could vary significantly across different TV sets. And the after-market world of emulation shows an equal variation of RGB palette flavors.
 
 If you wish to convert graphics targeting the NES from the start, it is strongly recommended to use alternative (2) and work with the actual NES hardware colors, by disabling the "Color mapping" checkbox.
 
-The "Input" UI also allows selecting which NES color should be treated as background. Which color is chosen can have a drastic effect on the ability to convert an image. Typically you'll want the background color to be the most common color among your grid cells. Black (1D) is a common choice.
+The "Input" UI also allows selecting which NES color should be treated as background. Which color is chosen can have a drastic effect on the ability to convert an image. Typically you'll want the background color to be the most common color among your 16x16 grid cells. Black (1D) is a common choice.
 
 #### Adding new palettes to OverlayPal
 
 If you wish to try out converting existing RGB images using a different palette flavor - or simply want to alternate between palettes - OverlayPal supports loading an arbitrary number of .pal files to switch between.
 
-Simply put a 192-byte .pal files (used by most NES emulators) in the "nespalettes" folder and OverlayPal will load this palette and allow using it for both color display and RGB color mapping.
+Simply put a 192-byte .pal file (used by most NES emulators) in the "nespalettes" folder and OverlayPal will load this palette, and allow using it for both color display and RGB color mapping.
 
 #### Unique colors option
 
-With arbitrary images not created from a specific NES palette flavor, you might find a nuisance in how colors meant to be distinct sometimes get remapped to identical colors, effectively turning the color remapping into a lossy conversion.
+With arbitrary images not created from a specific NES palette flavor, you might find a nuisance in how colors meant to be distinct sometimes get remapped to identical NES hardware colors, effectively turning the color remapping into a lossy conversion.
 
-To remedy this issue, enabling the "Unique colors" option ensures each unique color will remain unique after color mapping is applied, at the cost of a poorer preservation of a color's hue.
+To remedy this issue, enabling the "Unique colors" option ensures that each unique color will remain unique after color mapping is applied, at the cost of a poorer preservation of a color's hue.
 
 The "Unique colors" option is NOT recommended if your input image contains just slightly different colors by accident that you actually intended to be the same color.
 
 ### Converting an image
 
-Pressing "Convert" will convert the image using the CMPL optimisation solver. The right image will show a busy indicator, and eventually come back with a success or failure to convert. The "Generated Palettes" window will also show the background / sprite palettes of the output image.
+Pressing "Convert" will convert the image using the CMPL optimisation solver. The right image will show a busy indicator, and eventually come back with a success or failure to convert. The "Generated Palettes" window will also show the background / sprite palettes of the output image chosen by OverlayPal.
 
-![OverlayPal screenshot](/screenshots/Bernie-screenshot.png)
+![OverlayPal screenshot](screenshots/Bernie-screenshot.png)
 
 Successfully converted images can then be saved to a PNG file - optionally with different palette filters applied to separate background / overlay(s).
 
 #### Timeout value
-The "Timeout" value allows setting the maximum time in seconds to wait for the CMPL solver to complete. Note that as the solving currently happens in two sequential passes, this timeout will actually be waited on twice.
+
+The "Timeout" value allows setting the maximum time in seconds to wait for the CBC solver to complete. Note that as the solving currently happens in two sequential passes, this timeout will actually be waited on twice.
+
+A timeout value of 0 will disable the timeout completely, making CBC continue to search until the global optimum has been identified.
+While this is the best guarantee to obtain a better / valid solution it does comes at a big cost, as the search can take hours or even days for complicated images.
 
 ### Setting limits for optimisation
 
@@ -107,10 +111,10 @@ The right-most radio buttons allow switching between two display modes for BG or
 The left-most radio buttons allow switching between what numbers are displayed
 
 * Off: Show no numbers
-* Number of colors: Shows the color count for each background grid cell / hardware sprite (excluding the common background color)
-* Palette colors: Show the individual NES colors the grid cell / hardware uses
+* Number of colors: Shows the color count for each background grid cell / sprite (excluding the common background color)
+* Palette colors: Show the individual NES colors the grid cell / sprite uses
 * Palette indices: Shows the same colors remapped to an index in the Generated 32-color palette (8 sub-palettes)
-* Attributes: Shows the attribute number of the grid cell / hardware sprite (i.e., which of the 4 sub-palettes it is using)
+* Attributes: Shows the attribute number of the grid cell / sprite (i.e., which of the 4 sub-palettes it is using)
 
 ### Save converted PNG...
 
@@ -121,11 +125,12 @@ This allows you to save the converted image (with palette display settings appli
 This allows exporting the converted image (with palette display settings applied) to the binary formats used by the NES PPU hardware and other NES graphics editing tools.
 
 More specifically, the following files are saved:
+
 * [filename].nam file - The 1kB NES nametable data storing tile indices and 16x16 attributes selecting palettes
 * [filename].exram - Extended bits for tile indices and 8x8 attributes, matching the MMC5 exRAM layout
 * [filename]_bg.chr - The character data for the background layer
 * [filename]_spr.chr - The character data for the sprite layer
-* [filename].oam - The tile indices, positions and palette selection for sprites, encoded in NES Object Attribute Memory format
+* [filename].oam - Tile indices / positions / palette selection for sprites, encoded in NES Object Attribute Memory format
 * [filename]_palette.dat - The 32-entry palette representing NES PPU colors
 
 The dialog box will query you for the name of the .nam file, and derive the other filenames accordingly.
