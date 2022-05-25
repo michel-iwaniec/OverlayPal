@@ -45,6 +45,7 @@ for:
       - mkdir OverlayPal-%VERSION_STRING%-win64-%CONFIGURATION%
       - cd OverlayPal-%VERSION_STRING%-win64-%CONFIGURATION%
       - copy ..\LICENSE .\
+      - copy ..\README.pdf .\
       - copy ..\release\OverlayPal.exe
       - xcopy ..\release\nespalettes nespalettes\
       - copy ..\release\*.cmpl .\
@@ -69,7 +70,6 @@ for:
       - windeployqt.exe --qmldir ..\src\qml OverlayPal.exe
       - cd ..
       - ps: 7z a OverlayPal-$env:VERSION_STRING-win64-$env:CONFIGURATION.zip OverlayPal-$env:VERSION_STRING-win64-$env:CONFIGURATION
-      - dir
       - appveyor PushArtifact OverlayPal-%VERSION_STRING%-win64-%CONFIGURATION%.zip
 
 # linux_x64
@@ -107,6 +107,7 @@ for:
       - cp -r AppDir OverlayPal-${VERSION_STRING}-linux_x64-${CONFIGURATION}/
       - cd OverlayPal-${VERSION_STRING}-linux_x64-${CONFIGURATION}
       - cp ../LICENSE ./AppDir/
+      - cp ../README.pdf ./AppDir/
       - mkdir -p ./AppDir/usr/bin
       - cp ../OverlayPal ./AppDir/usr/bin/
       - cp -r ../nespalettes ./AppDir/usr/bin/
