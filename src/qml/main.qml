@@ -366,7 +366,6 @@ Window {
                         id: mapInputColorsCheckBox
                         text: qsTr("Color mapping")
                         leftPadding: 0
-//                        font.pointSize: 10
                         enabled: true
                         checked: true
                         onCheckStateChanged: {
@@ -399,7 +398,6 @@ Window {
                         id: uniqueColorsCheckBox
                         text: qsTr("Unique colors")
                         leftPadding: 0
-//                        font.pointSize: 10
                         enabled: true
                         checked: false
                         onCheckStateChanged: optimiser.uniqueColors = checked
@@ -408,13 +406,11 @@ Window {
                     Label {
                         id: uniqueColorsEmptyLabel
                         text: qsTr("")
-//                        font.pointSize: 10
                     }
 
                     Label {
                         id: bgColorLabel
                         text: qsTr("Background color 0")
-//                        font.pointSize: 10
                     }
 
                     ComboBox {
@@ -472,7 +468,7 @@ Window {
                 height: 200
                 padding: 12
                 scale: 1
-                title: qsTr("Image shift before conversion")
+                title: qsTr("Image shift before convert")
 
                 GridLayout {
                     height: 112
@@ -622,7 +618,6 @@ Window {
                     Label {
                         id: spriteModeLabel
                         text: qsTr("SPR")
-//                        font.pointSize: 10
                     }
 
                     ComboBox {
@@ -643,7 +638,6 @@ Window {
                     Label {
                         id: bgModeLabel
                         text: qsTr("BG")
-//                        font.pointSize: 10
                     }
 
                     ComboBox {
@@ -935,7 +929,6 @@ Window {
                     Label {
                         id: label11
                         text: qsTr("Timeout")
-//                        font.pointSize: 9
                     }
 
                     SpinBox {
@@ -947,7 +940,6 @@ Window {
                         clip: false
                         scale: 1
                         wheelEnabled: true
-//                        font.pointSize: 8
                         editable: true
                         onValueChanged: optimiser.timeOut = value
                     }
