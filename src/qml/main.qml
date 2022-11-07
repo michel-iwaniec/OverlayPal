@@ -494,12 +494,16 @@ Window {
                     SpinBox {
                         id: xShiftSpinBox
                         x: 40
-                        to: 255
+                        from: -to
+                        to: 2*256
                         value: 0
                         leftPadding: 46
                         transformOrigin: Item.Center
                         Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
-                        onValueChanged: optimiser.shiftX = value
+                        onValueChanged: {
+                            value = ((value % 256) + 256) % 256;
+                            optimiser.shiftX = value
+                        }
                         editable: true
                     }
 
@@ -518,10 +522,14 @@ Window {
                     SpinBox {
                         id: yShiftSpinBox
                         x: 40
-                        to: 239
+                        from: -to
+                        to: 2*240
                         value: 0
                         Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
-                        onValueChanged: optimiser.shiftY = value
+                        onValueChanged: {
+                            value = ((value % 240) + 240) % 240;
+                            optimiser.shiftY = value
+                        }
                         editable: true
                     }
                 }
