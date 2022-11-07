@@ -88,7 +88,7 @@ QVariant HardwareColorsModel::data(const QModelIndex &index, int role) const
         {
             case Qt::DisplayRole:
                 return "3F";
-            case Qt::BackgroundColorRole:
+            case Qt::BackgroundRole:
                 return QColor(0, 0, 0);
             case Qt::ForegroundRole:
                 return QColor(255, 255, 255);
@@ -105,7 +105,7 @@ QVariant HardwareColorsModel::data(const QModelIndex &index, int role) const
     {
         case Qt::DisplayRole:
             return QString("%1").arg(color, 2, 16, QLatin1Char('0')).toUpper();
-        case Qt::BackgroundColorRole:
+        case Qt::BackgroundRole:
             return backgroundColor;
         case Qt::ForegroundRole:
             return foregroundTextColor(backgroundColor);
@@ -133,6 +133,6 @@ Qt::ItemFlags HardwareColorsModel::flags(const QModelIndex &index) const
 QHash<int, QByteArray> HardwareColorsModel::roleNames() const
 {
     return { {Qt::DisplayRole, "display"},
-             {Qt::BackgroundColorRole, "backgroundColor"},
+             {Qt::BackgroundRole, "backgroundColor"},
              {Qt::ForegroundRole, "foregroundColor"}};
 }
