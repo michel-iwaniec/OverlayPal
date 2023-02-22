@@ -21,8 +21,7 @@ import QtQuick.Window 2.3
 import QtQuick.Controls 2.12
 import QtQuick.Layouts 1.3
 import QtQuick.Controls.Universal 2.0
-import QtQuick.Extras 1.4
-import QtQuick.Dialogs 1.1
+import QtQuick.Dialogs
 
 import nes.overlay.optimiser 1.0
 
@@ -359,7 +358,9 @@ Window {
                         Layout.preferredHeight: 36
                         Layout.preferredWidth: 113
                         leftPadding: 0
-                        onCheckStateChanged: optimiser.trackInputImage = trackInputImageCheckBox.checked;
+                        onCheckStateChanged: {
+                            optimiser.trackInputImage = trackInputImageCheckBox.checked;
+                        }
                     }
 
                     CheckBox {
@@ -445,12 +446,12 @@ Window {
                                 horizontalAlignment: Text.AlignHCenter
                             }
                             background: Rectangle {
-                                color: bgColorComboBox.model.data(bgColorComboBox.model.index(index, 0), Qt.BackgroundColorRole);
+                                color: bgColorComboBox.model.data(bgColorComboBox.model.index(index, 0), Qt.BackgroundRole);
                             }
                         }
 
                         background: Rectangle {
-                            color: bgColorComboBox.model.data(bgColorComboBox.model.index(bgColorComboBox.currentIndex, 0), Qt.BackgroundColorRole);
+                            color: bgColorComboBox.model.data(bgColorComboBox.model.index(bgColorComboBox.currentIndex, 0), Qt.BackgroundRole);
                         }
 
                         Component.onCompleted: {
@@ -1011,7 +1012,6 @@ Window {
             id: invalidImageMessageDialog
             title: "Error"
             text: "Image file format not recognized."
-            icon: StandardIcon.Critical
             onAccepted: {
                 visible = false;
             }
@@ -1021,12 +1021,10 @@ Window {
             id: loadImageDialog
             visible: false
             title: "Load .png image"
-            folder: shortcuts.home
             nameFilters: ["Image files (*.png *.bmp *.gif)"]
-            selectExisting: true
             onAccepted: {
                 visible = false;
-                loadImage(fileUrls[0]);
+                loadImage(selectedFile);
             }
             onRejected: {
                 visible = false
@@ -1041,12 +1039,10 @@ Window {
             id: saveConvertedDialog
             visible: false
             title: "Save .png image"
-            folder: shortcuts.home
             nameFilters: ["Indexed PNG (*.png)"]
-            selectExisting: false
             onAccepted: {
                 visible = false
-                optimiser.saveOutputImage(fileUrls[0], getMask());
+                optimiser.saveOutputImage(selectedFile, getMask());
             }
             onRejected: {
                 visible = false
@@ -1061,9 +1057,7 @@ Window {
             id: exportConvertedDialog
             visible: false
             title: "Export RAW binary (NES) data"
-            folder: shortcuts.home
             nameFilters: ["Nametable (*.nam)"]
-            selectExisting: false
             onAccepted: {
                 visible = false
                 optimiser.exportOutputImage(fileUrls[0], getMask());

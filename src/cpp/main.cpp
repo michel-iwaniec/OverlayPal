@@ -21,6 +21,7 @@
 #include <QCoreApplication>
 #include <QQmlEngine>
 #include <QQmlComponent>
+#include <QQuickStyle>
 #include <QDebug>
 
 #include "OverlayPalGuiBackend.h"
@@ -34,6 +35,8 @@ int main(int argc, char *argv[])
 
     qmlRegisterType<OverlayPalGuiBackend>("nes.overlay.optimiser",1,0,"OverlayPalGuiBackend");
     QQmlApplicationEngine engine;
+    // setStyle seems to have only minor effects...
+    // QQuickStyle::setStyle("Basic");
     engine.load(QUrl(QStringLiteral("qrc:/main.qml")));
     if (engine.rootObjects().isEmpty())
         return -1;

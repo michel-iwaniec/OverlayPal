@@ -19,11 +19,11 @@
 import QtQuick 2.12
 
 Item {
+    property var imageCanvas
+    property var img
     Image {
         id: imageLoadingProxy
         visible: false
-        property var imageCanvas
-        property var img
         onStatusChanged: {
             if(status == Image.Ready)
             {
@@ -34,7 +34,7 @@ Item {
 
     function setImage(canvas, img)
     {
-        imageLoadingProxy.imageCanvas = canvas;
+        imageCanvas = canvas;
         imageLoadingProxy.source = img;
     }
 }
