@@ -494,11 +494,20 @@ Window {
                     SpinBox {
                         id: xShiftSpinBox
                         x: 40
+                        from: 0
                         to: 255
                         value: 0
                         leftPadding: 46
                         transformOrigin: Item.Center
                         Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
+                        wrap: true
+                        validator: IntValidator {
+                            bottom: -255
+                            top: 255
+                        }
+                        valueFromText: function(text, locale) {
+                            return (Number.fromLocaleString(locale, text) + 256) % 256;
+                        }
                         onValueChanged: optimiser.shiftX = value
                         editable: true
                     }
@@ -518,9 +527,18 @@ Window {
                     SpinBox {
                         id: yShiftSpinBox
                         x: 40
+                        from: 0
                         to: 239
                         value: 0
                         Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
+                        wrap: true
+                        validator: IntValidator {
+                            bottom: -239
+                            top: 239
+                        }
+                        valueFromText: function(text, locale) {
+                            return (Number.fromLocaleString(locale, text) + 240) % 240;
+                        }
                         onValueChanged: optimiser.shiftY = value
                         editable: true
                     }
