@@ -171,6 +171,9 @@ Window {
             dstImageCanvas.gridCellHeight = Const.NametablePixelHeight / dstImageCanvas.gridHeight;
             dstImageCanvas.requestPaint();
             dstImageCanvas.inputImageUpdated();
+            // Enable save/export now that output image is valid
+            saveImageButton.enabled = true;
+            exportImageButton.enabled = true;
         }
 
         function startImageConversionWrapper()
@@ -925,6 +928,7 @@ Window {
                     Component.onCompleted: {
                         saveImageButton.onClicked.connect(saveConvertedDialog.openDialog);
                     }
+                    enabled: false
                 }
                 Button {
                     id: exportImageButton
@@ -936,6 +940,7 @@ Window {
                     Component.onCompleted: {
                         exportImageButton.onClicked.connect(exportConvertedDialog.openDialog);
                     }
+                    enabled: false
                 }
                 RowLayout {
                     x: 0
