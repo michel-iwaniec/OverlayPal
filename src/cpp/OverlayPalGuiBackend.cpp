@@ -88,6 +88,7 @@ OverlayPalGuiBackend::OverlayPalGuiBackend(QObject *parent):
     mHardwarePaletteName("palgen"),
     mOutputImage(ScreenWidth, ScreenHeight, QImage::Format_Indexed8),
     mBackgroundColor(0),
+    mAutoBackgroundColor(true),
     mInputImage(ScreenWidth, ScreenHeight, QImage::Format_Indexed8),
     mInputImageIndexed(ScreenWidth, ScreenHeight, QImage::Format_Indexed8),
     mGridCellWidth(16),
@@ -242,33 +243,46 @@ QImage OverlayPalGuiBackend::cropOrExtendImage(const QImage& image, uint8_t back
 
 //---------------------------------------------------------------------------------------------------------------------
 
-uint8_t OverlayPalGuiBackend::detectBackgroundColor(const QImage& image, uint8_t oldBackgroundColor)
+bool OverlayPalGuiBackend::colorInImage(const QImage& image, uint8_t color) const
 {
-    bool oldBackgroundColorInImage = false;
     for(int y = 0; y < image.height(); y++)
     {
         for(int x = 0; x < image.width(); x++)
         {
-            if(image.pixelIndex(x, y) == oldBackgroundColor)
+            if(image.pixelIndex(x, y) == color)
             {
-                oldBackgroundColorInImage = true;
-                break;
+                return true;
             }
         }
     }
-    if(!oldBackgroundColorInImage)
+    return false;
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+
+uint8_t OverlayPalGuiBackend::detectBackgroundColor(const QImage& image)
+{
+    assert(image.width() > 0 && image.height() > 0);
+    std::unordered_map<uint8_t, size_t> colors = colorCounts(qImageToImage2D(image));
+    assert(colors.size() > 0);
+    uint8_t mostCommonColor = 0x3F;
+    size_t mostCommonCount = 0;
+    for (auto& [color, count]: colors)
     {
-        assert(image.width() > 0 && image.height() > 0);
-        uint8_t newBackgroundColor = image.pixelIndex(0, 0);
-        assert(newBackgroundColor < image.colorTable().size());
-        assert(newBackgroundColor < HardwarePaletteSize);
-        return newBackgroundColor;
+        if(count > mostCommonCount)
+        {
+            mostCommonCount = count;
+            mostCommonColor = color;
+        }
     }
-    else
-    {
-        assert(oldBackgroundColor < HardwarePaletteSize);
-        return oldBackgroundColor;
-    }
+    return mostCommonColor;
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+
+Q_INVOKABLE QVariant OverlayPalGuiBackend::detectBackgroundColor() const
+{
+    return QVariant(static_cast<uint>(detectBackgroundColor(mInputImageIndexed)));
 }
 
 //---------------------------------------------------------------------------------------------------------------------
@@ -293,12 +307,9 @@ void OverlayPalGuiBackend::quantizeInputImage()
         // First quantize to 256 colors for simplicity
         QImage inputImageQuantized = mInputImage.convertToFormat(QImage::Format_Indexed8, Qt::ThresholdDither);
         // Then remap to NES palette values
-        mInputImageIndexed = remapColorsToNES(inputImageQuantized, mBackgroundColor);
+        mInputImageIndexed = remapColorsToNES(inputImageQuantized);
     }
     assert(mInputImageIndexed.width() > 0 && mInputImageIndexed.height() > 0);
-    // detect background color from current / available colors
-    uint8_t backgroundColor = detectBackgroundColor(mInputImageIndexed, mBackgroundColor);
-    //
     mInputImageHardwareColorsModel.setHardwarePalette(mHardwarePalettes[mHardwarePaletteName]);
     // Collect hardware palette values from input image
     std::set<uint8_t> colors;
@@ -312,13 +323,17 @@ void OverlayPalGuiBackend::quantizeInputImage()
     }
     mInputImageHardwareColorsModel.setColors(colors);
     // crop image
-    mInputImageIndexedBeforeShift = cropOrExtendImage(mInputImageIndexed, backgroundColor);
+    mInputImageIndexedBeforeShift = cropOrExtendImage(mInputImageIndexed, mBackgroundColor);
     // Shift image by current shift values
     mInputImageIndexed = shiftQImage(mInputImageIndexedBeforeShift);
     emit inputImageChanged();
     // Make sure backgroundColorChanged is set and emitted once more after inputImageChanged
-    mBackgroundColor = backgroundColor;
-    emit backgroundColorChanged();
+    bool backgroundColorInImage = colorInImage(mInputImageIndexed, mBackgroundColor);
+    if(mAutoBackgroundColor || !backgroundColorInImage)
+    {
+        mBackgroundColor = detectBackgroundColor(mInputImageIndexed);
+        emit backgroundColorChanged();
+    }
 }
 
 //---------------------------------------------------------------------------------------------------------------------
@@ -441,7 +456,25 @@ int OverlayPalGuiBackend::backgroundColor() const
 
 void OverlayPalGuiBackend::setBackgroundColor(int backgroundColor)
 {
-    mBackgroundColor = static_cast<uint8_t>(backgroundColor);
+    if(mBackgroundColor != static_cast<uint8_t>(backgroundColor))
+    {
+        mBackgroundColor = static_cast<uint8_t>(backgroundColor);
+        emit backgroundColorChanged();
+    }
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+
+bool OverlayPalGuiBackend::autoBackgroundColor() const
+{
+    return mAutoBackgroundColor;
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+
+void OverlayPalGuiBackend::setAutoBackgroundColor(bool autoBackgroundColor)
+{
+    mAutoBackgroundColor = static_cast<uint8_t>(autoBackgroundColor);
 }
 
 //---------------------------------------------------------------------------------------------------------------------
@@ -659,7 +692,7 @@ void OverlayPalGuiBackend::startImageConversion()
 
 //---------------------------------------------------------------------------------------------------------------------
 
-QVector<QRgb> OverlayPalGuiBackend::makeColorTable()
+QVector<QRgb> OverlayPalGuiBackend::makeColorTable() const
 {
     const auto& rgbPalette = mHardwarePalettes[hardwarePaletteName()];
     const std::vector<std::set<uint8_t>>& palettes = mOverlayOptimiser.palettes();
@@ -691,7 +724,7 @@ QVector<QRgb> OverlayPalGuiBackend::makeColorTable()
 
 //---------------------------------------------------------------------------------------------------------------------
 
-QVector<QRgb> OverlayPalGuiBackend::makeColorTableFromHardwarePalette()
+QVector<QRgb> OverlayPalGuiBackend::makeColorTableFromHardwarePalette() const
 {
     const QVariantList& rgbPalette = mHardwarePalettes[hardwarePaletteName()];
     const std::vector<std::set<uint8_t>>& palettes = mOverlayOptimiser.palettes();
@@ -819,7 +852,7 @@ QObject *OverlayPalGuiBackend::hardwarePaletteNamesModel()
 
 //---------------------------------------------------------------------------------------------------------------------
 
-uint8_t OverlayPalGuiBackend::findClosestColorIndex(const QVector<QRgb>& colorTable, QRgb rgb, std::vector<bool>& availableColors)
+uint8_t OverlayPalGuiBackend::findClosestColorIndex(const QVector<QRgb>& colorTable, QRgb rgb, std::vector<bool>& availableColors) const
 {
     QColor color(rgb);
     color.setAlpha(0);
@@ -846,7 +879,7 @@ uint8_t OverlayPalGuiBackend::findClosestColorIndex(const QVector<QRgb>& colorTa
 
 //---------------------------------------------------------------------------------------------------------------------
 
-QImage OverlayPalGuiBackend::remapColorsToNES(const QImage& inputImage, uint8_t& backgroundColor)
+QImage OverlayPalGuiBackend::remapColorsToNES(const QImage& inputImage) const
 {
     // Find all colors in image
     std::set<QRgb> colorsInImage;
@@ -882,8 +915,6 @@ QImage OverlayPalGuiBackend::remapColorsToNES(const QImage& inputImage, uint8_t&
     }
     QImage outputImage(inputImage.width(), inputImage.height(), QImage::Format_Indexed8);
     outputImage.setColorTable(hwColorTable);
-    // Remap background color
-    backgroundColor = remapping[backgroundColor];
     // Remap  image
     for(int y = 0; y < inputImage.height(); y++)
     {

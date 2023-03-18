@@ -411,13 +411,25 @@ Window {
                         text: qsTr("")
                     }
 
-                    Label {
-                        id: bgColorLabel
-                        text: qsTr("Background color 0")
+                    CheckBox {
+                        id: bgColorCheckBox
+                        text: qsTr("Force Background Color")
+                        leftPadding: 0
+                        enabled: true
+                        checked: false
+                        onCheckStateChanged: {
+                            optimiser.autoBackgroundColor = !checked;
+                            if(optimiser.autoBackgroundColor)
+                            {
+                                var bestBackgroundColor = optimiser.detectBackgroundColor();
+                                optimiser.backgroundColor = bestBackgroundColor;
+                            }
+                        }
                     }
 
                     ComboBox {
                         id: bgColorComboBox
+                        enabled: bgColorCheckBox.checked
                         currentIndex: -1
                         displayText: model.data(model.index(currentIndex, 0), Qt.DisplayRole)
                         onCurrentIndexChanged: {

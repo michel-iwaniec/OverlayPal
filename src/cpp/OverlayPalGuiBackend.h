@@ -43,6 +43,7 @@ class OverlayPalGuiBackend : public QObject
     Q_PROPERTY(bool mapInputColors READ mapInputColors WRITE setMapInputColors NOTIFY mapInputColorsChanged)
     Q_PROPERTY(bool uniqueColors READ uniqueColors WRITE setUniqueColors)
     Q_PROPERTY(int backgroundColor READ backgroundColor WRITE setBackgroundColor NOTIFY backgroundColorChanged)
+    Q_PROPERTY(bool autoBackgroundColor READ autoBackgroundColor WRITE setAutoBackgroundColor NOTIFY autoBackgroundColorChanged)
     Q_PROPERTY(QString inputImageFilename READ inputImageFilename WRITE setInputImageFilename)
     Q_PROPERTY(int shiftX READ shiftX WRITE setShiftX NOTIFY shiftXChanged)
     Q_PROPERTY(int shiftY READ shiftY WRITE setShiftY NOTIFY shiftYChanged)
@@ -67,6 +68,9 @@ public:
 
     int backgroundColor() const;
     void setBackgroundColor(int backgroundColor);
+
+    bool autoBackgroundColor() const;
+    void setAutoBackgroundColor(bool autoBackgroundColor);
 
     bool trackInputImage() const;
     void setTrackInputImage(bool trackInputImage);
@@ -128,6 +132,7 @@ public:
     bool writeBinaryFile(QString filename, const QByteArray& a);
     bool writeBinaryFile(const QString& filename, const std::vector<uint8_t>& v);
 
+    Q_INVOKABLE QVariant detectBackgroundColor() const;
 
 public slots:
     void findOptimalShift();
@@ -143,6 +148,7 @@ public slots:
 signals:
     void mapInputColorsChanged();
     void backgroundColorChanged();
+    void autoBackgroundColorChanged();
     void shiftXChanged();
     void shiftYChanged();
 
@@ -160,18 +166,19 @@ protected:
     static Image2D qImageToImage2D(const QImage& qImage);
     static QImage image2DToQImage(const Image2D& image, const QVector<QRgb>& colorTable);
 
-    QVector<QRgb> makeColorTable();
-    QVector<QRgb> makeColorTableFromHardwarePalette();
+    QVector<QRgb> makeColorTable() const;
+    QVector<QRgb> makeColorTableFromHardwarePalette() const;
 
     const QString& hardwarePaletteName() const;
     void setHardwarePaletteName(const QString& hardwarePaletteName);
     void loadHardwarePalette(const QFileInfo& fileInfo);
     void loadHardwarePalettes(const QString& palettesPath);
-    uint8_t findClosestColorIndex(const QVector<QRgb>& colorTable, QRgb rgb, std::vector<bool>& availableColors);
-    QImage remapColorsToNES(const QImage& inputImage, uint8_t& backgroundColor);
+    uint8_t findClosestColorIndex(const QVector<QRgb>& colorTable, QRgb rgb, std::vector<bool>& availableColors) const;
+    QImage remapColorsToNES(const QImage& inputImage) const;
 
     static QImage cropOrExtendImage(const QImage& image, uint8_t backgroundColor);
-    static uint8_t detectBackgroundColor(const QImage& image, uint8_t oldBackgroundColor);
+    bool colorInImage(const QImage& image, uint8_t color) const;
+    static uint8_t detectBackgroundColor(const QImage& image);
 
     static uint8_t indexInPalette(const std::set<uint8_t>& palette, uint8_t color);
 
@@ -189,6 +196,7 @@ private:
     int mMaxSpritesPerScanline;
     bool mMapInputColors;
     uint8_t mBackgroundColor;
+    bool mAutoBackgroundColor;
     bool mPreventBlackerThanBlack;
     bool mInputImagePaletteMapping;
     bool mConversionInProgress;
