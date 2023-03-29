@@ -429,9 +429,12 @@ Window {
 
                     ComboBox {
                         id: bgColorComboBox
-                        enabled: bgColorCheckBox.checked
+                        enabled: true
                         currentIndex: -1
                         displayText: model.data(model.index(currentIndex, 0), Qt.DisplayRole)
+                        onPressedChanged: {
+                            bgColorCheckBox.checked = true;
+                        }
                         onCurrentIndexChanged: {
                             var bgColor = parseInt(model.data(model.index(currentIndex, 0), Qt.DisplayRole), 16);
                             optimiser.backgroundColor = bgColor;
@@ -441,11 +444,11 @@ Window {
                         Layout.preferredWidth: 118
 
                         contentItem: Text {
-                            text: bgColorComboBox.displayText
+                            text: (bgColorCheckBox.checked ? "       " : " auto: ") + bgColorComboBox.displayText
                             color: bgColorComboBox.model.data(bgColorComboBox.model.index(bgColorComboBox.currentIndex, 0), Qt.ForegroundRole);
                             font: bgColorComboBox.font
                             verticalAlignment: Text.AlignVCenter
-                            horizontalAlignment: Text.AlignHCenter
+                            horizontalAlignment: Text.AlignHLeft
                             elide: Text.ElideRight
                         }
 
