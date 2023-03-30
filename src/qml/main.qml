@@ -429,6 +429,8 @@ Window {
 
                     ComboBox {
                         id: bgColorComboBox
+                        font.family: "Courier"
+                        font.bold: true
                         enabled: true
                         currentIndex: -1
                         displayText: model.data(model.index(currentIndex, 0), Qt.DisplayRole)
