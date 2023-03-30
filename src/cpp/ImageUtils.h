@@ -27,6 +27,11 @@
 #include "GridLayer.h"
 
 //
+// Obtains the frequency of each color in an image
+//
+std::unordered_map<uint8_t, size_t> colorCounts(const Image2D& image);
+
+//
 // Created a shifted image from an original image
 //
 Image2D shiftImage(const Image2D&, int shiftX, int shiftY);

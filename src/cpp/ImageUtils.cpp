@@ -36,6 +36,29 @@ struct ContinuousPaletteRange
 
 //---------------------------------------------------------------------------------------------------------------------
 
+std::unordered_map<uint8_t, size_t> colorCounts(const Image2D& image)
+{
+    std::unordered_map<uint8_t, size_t> counts;
+    for(int y = 0; y < image.height(); y++)
+    {
+        for(int x = 0; x < image.width(); x++)
+        {
+            uint8_t c = image(x, y);
+            if(counts.find(c) == counts.end())
+            {
+                counts[c] = 1;
+            }
+            else
+            {
+                counts[c]++;
+            }
+        }
+    }
+    return counts;
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+
 Image2D shiftImage(const Image2D& image, int shiftX, int shiftY)
 {
     const int w = image.width();

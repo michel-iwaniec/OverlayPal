@@ -411,15 +411,32 @@ Window {
                         text: qsTr("")
                     }
 
-                    Label {
-                        id: bgColorLabel
-                        text: qsTr("Background color 0")
+                    CheckBox {
+                        id: bgColorCheckBox
+                        text: qsTr("Force Background Color")
+                        leftPadding: 0
+                        enabled: true
+                        checked: false
+                        onCheckStateChanged: {
+                            optimiser.autoBackgroundColor = !checked;
+                            if(optimiser.autoBackgroundColor)
+                            {
+                                var bestBackgroundColor = optimiser.detectBackgroundColor();
+                                optimiser.backgroundColor = bestBackgroundColor;
+                            }
+                        }
                     }
 
                     ComboBox {
                         id: bgColorComboBox
+                        font.family: "Courier"
+                        font.bold: true
+                        enabled: true
                         currentIndex: -1
                         displayText: model.data(model.index(currentIndex, 0), Qt.DisplayRole)
+                        onPressedChanged: {
+                            bgColorCheckBox.checked = true;
+                        }
                         onCurrentIndexChanged: {
                             var bgColor = parseInt(model.data(model.index(currentIndex, 0), Qt.DisplayRole), 16);
                             optimiser.backgroundColor = bgColor;
@@ -429,11 +446,11 @@ Window {
                         Layout.preferredWidth: 118
 
                         contentItem: Text {
-                            text: bgColorComboBox.displayText
+                            text: (bgColorCheckBox.checked ? "       " : " auto: ") + bgColorComboBox.displayText
                             color: bgColorComboBox.model.data(bgColorComboBox.model.index(bgColorComboBox.currentIndex, 0), Qt.ForegroundRole);
                             font: bgColorComboBox.font
                             verticalAlignment: Text.AlignVCenter
-                            horizontalAlignment: Text.AlignHCenter
+                            horizontalAlignment: Text.AlignHLeft
                             elide: Text.ElideRight
                         }
 
