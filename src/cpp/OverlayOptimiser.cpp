@@ -568,30 +568,30 @@ std::string OverlayOptimiser::convert(const Image2D& image,
     }
     mBackgroundColor = backgroundColor;
     mSpriteHeight = _spriteHeight;
-    // Halve GridCellWidth for sprite layer after first pass
-    int OverlayGridCellWidth = spriteWidth();
-    int OverlayWidth = image.width() / OverlayGridCellWidth;
     Image2D imageBackground(image.width(), image.height());
     Image2D imageOverlay(image.width(), image.height());
     Image2D imageOverlayGrid(image.width(), image.height());
     Image2D imageOverlayFree(image.width(), image.height());
-    GridLayer layer(backgroundColor, gridCellWidth, gridCellHeight, image);
-    GridLayer layerBackground(backgroundColor, layer.cellWidth(), layer.cellHeight(), layer.width(), layer.height());
-    GridLayer layerOverlay(backgroundColor, layer.cellWidth(), layer.cellHeight(), layer.width(), layer.height());
+    GridLayer layer(mBackgroundColor, gridCellWidth, gridCellHeight, image);
+    GridLayer layerBackground(mBackgroundColor, layer.cellWidth(), layer.cellHeight(), layer.width(), layer.height());
+    GridLayer layerOverlay(mBackgroundColor, layer.cellWidth(), layer.cellHeight(), layer.width(), layer.height());
     Array2D<uint8_t> paletteIndicesBackground(layer.width(), layer.height());
-    Array2D<uint8_t> paletteIndicesOverlay(OverlayWidth, imageOverlayGrid.height() / _spriteHeight );
+    const int OverlayGridCellWidth = spriteWidth();
+    const int OverlayGridCellHeight = _spriteHeight;
+    const int OverlayWidth = image.width() / OverlayGridCellWidth;
+    const int OverlayHeight = image.height() / OverlayGridCellHeight;
     // Initialise output data to blank values
     const Image2D blankImage = Image2D(image.width(), image.height(), mBackgroundColor);
-    const GridLayer blankLayer = GridLayer(mBackgroundColor, OverlayGridCellWidth, layer.cellHeight(), OverlayWidth, layer.height());
     mOutputImage = blankImage;
     mOutputImageBackground = blankImage;
     mOutputImageOverlay = blankImage;
     mOutputImageOverlayGrid = blankImage;
     mOutputImageOverlayFree = blankImage;
-    mLayerOverlay = blankLayer;
-    mLayerOverlayFree = blankLayer;
-    mPaletteIndicesBackground = paletteIndicesBackground;
-    mPaletteIndicesOverlay = paletteIndicesOverlay;
+    const GridLayer blankOverlay = GridLayer(mBackgroundColor, OverlayGridCellWidth, OverlayGridCellHeight, OverlayWidth, OverlayHeight);
+    mLayerOverlay = blankOverlay;
+    mLayerOverlayFree = blankOverlay;
+    mPaletteIndicesBackground = Array2D<uint8_t>(layer.width(), layer.height());
+    mPaletteIndicesOverlay = Array2D<uint8_t>(OverlayWidth, OverlayHeight);
     // * 4 to always get a visible solution, even if beyond constraints
     int maxRowSize = ((4 * spriteWidth()) / gridCellWidth) * maxSpritesPerScanline;
     // Execute first pass
@@ -628,13 +628,12 @@ std::string OverlayOptimiser::convert(const Image2D& image,
     assert(!image.empty(mBackgroundColor));
     assert(!imageBackground.empty(mBackgroundColor) || maxBackgroundPalettes == 0);
     mOutputImageBackground = imageBackground;
+    mLayerBackground = layerBackground;
     // if no colors were moved into overlay we are done
     if(imageOverlay.empty(mBackgroundColor) || maxSpritePalettes == 0)
     {
         mOutputImage = image;
-        mLayerBackground = layerBackground;
         mPaletteIndicesBackground = paletteIndicesBackground;
-        mPaletteIndicesOverlay = paletteIndicesOverlay;
         for(size_t i = 0; i < NumSpritePalettes; i++)
         {
             std::set<uint8_t> palette;
@@ -647,9 +646,10 @@ std::string OverlayOptimiser::convert(const Image2D& image,
             return "Sprite palettes required.";
     }
     // Re-initialise overlay layer with /2 width (...and /2 height if using 8x8 sprites)
-    layerOverlay = GridLayer(backgroundColor, OverlayGridCellWidth, spriteHeight(), imageOverlay);
-    GridLayer layerOverlayGrid(backgroundColor, OverlayGridCellWidth, spriteHeight(), OverlayWidth, layerOverlay.height());
-    GridLayer layerOverlayFree(backgroundColor, OverlayGridCellWidth, spriteHeight(), OverlayWidth, layerOverlay.height());
+    layerOverlay = GridLayer(backgroundColor, OverlayGridCellWidth, OverlayGridCellHeight, imageOverlay);
+    GridLayer layerOverlayGrid(backgroundColor, OverlayGridCellWidth, OverlayGridCellHeight, OverlayWidth, OverlayHeight);
+    GridLayer layerOverlayFree(backgroundColor, OverlayGridCellWidth, OverlayGridCellHeight, OverlayWidth, OverlayHeight);
+    Array2D<uint8_t> paletteIndicesOverlay(OverlayWidth, OverlayHeight);
     // Second pass
     bool successPassTwo = convertSecondPass(gridCellColorLimit,
                                             maxSpritePalettes,
