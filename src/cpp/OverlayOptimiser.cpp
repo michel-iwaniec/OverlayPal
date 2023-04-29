@@ -161,6 +161,13 @@ void OverlayOptimiser::parseSolutionValue(const std::string& line, std::vector<i
     size_t arrayStartPos = line.find("[", 0);
     size_t arrayEndPos = line.find("]", 0);
     size_t activityPos = line.find(";B;", 0);
+    if(activityPos == std::string::npos)
+    {
+        // For currently unknown reasons, the CMPL solution will sometimes have
+        // binary variables changed to integer.
+        // Work around this bug by re-trying a second time with 'I' instead of 'B'.
+        activityPos = line.find(";I;", 0);
+    }
     if(arrayStartPos != std::string::npos &&
        arrayEndPos != std::string::npos &&
        activityPos != std::string::npos)
