@@ -244,7 +244,7 @@ void buildDataNES_BGBanked(const Image2D& image,
 
         OutputTileRow(y, image, paletteMask, tileDataToIndex, paletteIndicesBackground, nametable, exRAM, chr[currentBank]);
     }
-    OutputAttributes(exRAM, nametable);
+    OutputAttributes(nametable, exRAM);
 }
 
 //---------------------------------------------------------------------------------------------------------------------
