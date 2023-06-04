@@ -81,6 +81,7 @@ OverlayPalGuiBackend::OverlayPalGuiBackend(QObject *parent):
     mTrackInputImage(false),
     mShiftX(0),
     mShiftY(0),
+    mExportBankSize(0),
     mPreventBlackerThanBlack(true),
     mMapInputColors(true),
     mConversionInProgress(false),
@@ -583,6 +584,20 @@ int OverlayPalGuiBackend::maxSpritesPerScanline() const
 void OverlayPalGuiBackend::setMaxSpritesPerScanline(int maxSpritesPerScanline)
 {
     mMaxSpritesPerScanline = maxSpritesPerScanline;
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+
+int OverlayPalGuiBackend::exportBankSize() const
+{
+    return mExportBankSize;
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+
+void OverlayPalGuiBackend::setExportBankSize(int exportBankSize)
+{
+    mExportBankSize = exportBankSize;
 }
 
 //---------------------------------------------------------------------------------------------------------------------
@@ -1127,18 +1142,26 @@ void OverlayPalGuiBackend::exportOutputImage(QString filename, int paletteMask)
 {
     filename = urlToLocal(filename);
     QFileInfo fi(filename);
-    ExportDataNES exportData = buildExportData(mOverlayOptimiser, paletteMask);
+    ExportDataNES exportData = buildExportData(mOverlayOptimiser, paletteMask, mExportBankSize);
     // Create filename suffixes based on selected .nam file
-    QString nametableFilename = fi.path() + "/" + fi.baseName() + ".nam";
-    QString exramFilename = fi.path() + "/" + fi.baseName() + ".exram";
-    QString bgCHRFilename = fi.path() + "/" + fi.baseName() + "_bg.chr";
-    QString sprCHRFilename = fi.path() + "/" + fi.baseName() + "_spr.chr";
-    QString oamFilename = fi.path() + "/" + fi.baseName() + ".oam";
-    QString paletteFilename = fi.path() + "/" + fi.baseName() + "_palette.dat";
+    QString pattern = QString("%1/%2").arg(fi.path(),fi.baseName());
+    QString exramFilename = pattern + ".exram";
+    QString nametableFilename = pattern + ".nam";
+    QString sprCHRFilename = pattern + "_spr.chr";
+    QString oamFilename = pattern + ".oam";
+    QString paletteFilename = pattern + "_palette.dat";
     // Write all binary data to files
+    // For bgCHR, if we have more than one in the export, then we add the index of the nametable
+    // to the filename when saving.
+    for (int i = 0; i < exportData.bgCHR.size(); ++i) {
+        const auto idx = (exportData.bgCHR.size() == 1) ? QString() : QString("_%1").arg(i);
+        QString bgCHRFilename = QString("%1/%2_bg%3.chr").arg(fi.path(), fi.baseName(), idx);
+        writeBinaryFile(bgCHRFilename, exportData.bgCHR[i]);
+    }
+    if (!exportData.exram.empty()) {
+        writeBinaryFile(exramFilename, exportData.exram);
+    }
     writeBinaryFile(nametableFilename, exportData.nametable);
-    writeBinaryFile(exramFilename, exportData.exram);
-    writeBinaryFile(bgCHRFilename, exportData.bgCHR);
     writeBinaryFile(oamFilename, exportData.oam);
     writeBinaryFile(sprCHRFilename, exportData.oamCHR);
     writeBinaryFile(paletteFilename, exportData.palette);
@@ -1171,6 +1194,10 @@ bool OverlayPalGuiBackend::writeBinaryFile(const QString& filename, const std::v
 
 int OverlayPalGuiBackend::numBackgroundTiles() const
 {
-    ExportDataNES exportData = buildExportData(mOverlayOptimiser, 0xFF);
-    return exportData.bgCHR.size() / ExportDataNES::TileSize;
+    ExportDataNES exportData = buildExportData(mOverlayOptimiser, 0xFF, mExportBankSize);
+    int total_size = 0;
+    for (auto& bgCHR : exportData.bgCHR) {
+        total_size += bgCHR.size();
+    }
+    return total_size / ExportDataNES::TileSize;
 }

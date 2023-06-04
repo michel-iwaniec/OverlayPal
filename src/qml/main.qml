@@ -33,7 +33,7 @@ import "version.js" as Version
 Window {
     id: window
     visible: true
-    width: 1820
+    width: 1830
     height: 984
     title: qsTr("OverlayPal (" + Version.VERSION_STRING + ") https://github.com/michel-iwaniec/OverlayPal")
     property var loaderProxy: null
@@ -43,11 +43,11 @@ Window {
         // Adapt window to either a 1080p screen or a less-than-1080p-screen.
         // TODO: Scaling choice needs to be more flexible going forward.
         var activePortion = 0.915;
-        var optimalWidth = 1920;
+        var optimalWidth = 1950;
         var optimalHeight = 1080;
         var zoom = 3;
         var uiScale = 1.0;
-        if(Screen.width < 1920)
+        if(Screen.width < optimalWidth)
         {
             optimalWidth = Screen.width;
             optimalHeight = Screen.height;
@@ -74,18 +74,18 @@ Window {
         id: dropArea;
         anchors.fill: parent
         onEntered: (drag) => {
-            if(drag.hasUrls && drag.urls.length === 1)
-            {
-                drag.accepted = true;
-            }
-            else
-            {
-                drag.accepted = false;
-            }
-        }
+                       if(drag.hasUrls && drag.urls.length === 1)
+                       {
+                           drag.accepted = true;
+                       }
+                       else
+                       {
+                           drag.accepted = false;
+                       }
+                   }
         onDropped: (drop) => {
-            loadImage(drop.urls[0]);
-        }
+                       loadImage(drop.urls[0]);
+                   }
     }
 
     OverlayPalGuiBackend {
@@ -142,8 +142,8 @@ Window {
                 var numBackgroundTiles = optimiser.numBackgroundTiles;
                 var sprites = optimiser.debugSpritesOverlay();
                 dstImageGroupBox.title = "Conversion successful." +
-                                         "    BG tiles: " + numBackgroundTiles +
-                                         "    Sprites: " + sprites.length;
+                        "    BG tiles: " + numBackgroundTiles +
+                        "    Sprites: " + sprites.length;
             }
             else
             {
@@ -174,6 +174,7 @@ Window {
             // Enable save/export now that output image is valid
             saveImageButton.enabled = true;
             exportImageButton.enabled = true;
+            exportBankSizeComboBox.enabled = true;
         }
 
         function startImageConversionWrapper()
@@ -930,117 +931,151 @@ Window {
 
             GroupBox {
                 id: saveGroupBox
-                width: 230
+                width: 245
                 height: 200
+                padding: 0
+                leftPadding: 0
+                topPadding: 19
                 title: qsTr("Output")
                 enabled: false
 
-                Button {
-                    id: saveImageButton
-                    x: 0
-                    y: 88
-                    width: 206
-                    height: 32
-                    text: qsTr("Save converted PNG...")
-                    Component.onCompleted: {
-                        saveImageButton.onClicked.connect(saveConvertedDialog.openDialog);
-                    }
-                    enabled: false
-                }
-                Button {
-                    id: exportImageButton
-                    x: 0
-                    y: 124
-                    width: 206
-                    height: 32
-                    text: qsTr("Export...")
-                    Component.onCompleted: {
-                        exportImageButton.onClicked.connect(exportConvertedDialog.openDialog);
-                    }
-                    enabled: false
-                }
-                RowLayout {
-                    x: 0
-                    y: 44
-                    width: 184
-                    height: 36
-                    spacing: 8
+                Column {
+                    id: column1
+                    width: 230
+                    height: 200
+                    rightPadding: 0
+                    leftPadding: 5
+                    topPadding: 10
+                    spacing: 3
 
-                    Label {
-                        id: label11
-                        text: qsTr("Timeout")
-                    }
+                    RowLayout {
+                        height: 36
+                        spacing: 8
 
-                    SpinBox {
-                        id: timeOutSpinBox
-                        to: 999
-                        value: 30
-                        width: 140
-                        height: 32
-                        clip: false
-                        scale: 1
-                        wheelEnabled: true
-                        editable: true
-                        onValueChanged: optimiser.timeOut = value
-                    }
-                }
+                        Button {
+                            id: convertImageButton
+                            y: 0
+                            height: 32
+                            text: qsTr("Convert")
+                            Layout.preferredHeight: 36
+                            Layout.preferredWidth: 103
+                            onClicked: {
+                                optimiser.startImageConversionWrapper();
+                            }
+                        }
 
-                RowLayout {
-                    x: 0
-                    y: 0
-                    height: 36
-                    spacing: 8
-
-                    Button {
-                        id: convertImageButton
-                        y: 0
-                        height: 32
-                        text: qsTr("Convert")
-                        Layout.preferredHeight: 36
-                        Layout.preferredWidth: 103
-                        onClicked: {
-                            optimiser.startImageConversionWrapper();
+                        CheckBox {
+                            id: autoConversionCheckBox
+                            height: 32
+                            text: qsTr("Auto")
+                            antialiasing: true
+                            onCheckedChanged: {
+                                if(checked)
+                                {
+                                    // Disable manual conversion button
+                                    convertImageButton.enabled = false
+                                    // Connect signals to start automatically
+                                    spriteModeComboBox.currentValueChanged.connect(optimiser.startImageConversionWrapper);
+                                    bgModeComboBox.currentValueChanged.connect(optimiser.startImageConversionWrapper);
+                                    xShiftSpinBox.valueModified.connect(optimiser.startImageConversionWrapper);
+                                    yShiftSpinBox.valueModified.connect(optimiser.startImageConversionWrapper);
+                                    maxBackgroundPalettesSpinBox.valueModified.connect(optimiser.startImageConversionWrapper);
+                                    maxSpritePalettesSpinBox.valueModified.connect(optimiser.startImageConversionWrapper);
+                                    maxSpritesPerScanlineSpinBox.valueModified.connect(optimiser.startImageConversionWrapper);
+                                    optimiser.shiftXChanged.connect(optimiser.startImageConversionWrapper);
+                                    optimiser.shiftYChanged.connect(optimiser.startImageConversionWrapper);
+                                    optimiser.inputImageChanged.connect(optimiser.startImageConversionWrapper);
+                                }
+                                else
+                                {
+                                    // Re-enable manual conversion button
+                                    convertImageButton.enabled = true
+                                    // Disconnect signals to stop starting automatically
+                                    spriteModeComboBox.currentValueChanged.disconnect(optimiser.startImageConversionWrapper);
+                                    bgModeComboBox.currentValueChanged.disconnect(optimiser.startImageConversionWrapper);
+                                    xShiftSpinBox.valueModified.disconnect(optimiser.startImageConversionWrapper);
+                                    yShiftSpinBox.valueModified.disconnect(optimiser.startImageConversionWrapper);
+                                    maxBackgroundPalettesSpinBox.valueModified.disconnect(optimiser.startImageConversionWrapper);
+                                    maxSpritePalettesSpinBox.valueModified.disconnect(optimiser.startImageConversionWrapper);
+                                    maxSpritesPerScanlineSpinBox.valueModified.disconnect(optimiser.startImageConversionWrapper);
+                                    optimiser.shiftXChanged.disconnect(optimiser.startImageConversionWrapper);
+                                    optimiser.shiftYChanged.disconnect(optimiser.startImageConversionWrapper);
+                                    optimiser.inputImageChanged.disconnect(optimiser.startImageConversionWrapper);
+                                }
+                            }
                         }
                     }
+                    RowLayout {
+                        width: 184
+                        height: 36
+                        spacing: 8
 
-                    CheckBox {
-                        id: autoConversionCheckBox
-                        height: 32
-                        text: qsTr("Auto")
-                        antialiasing: true
-                        onCheckedChanged: {
-                            if(checked)
-                            {
-                                // Disable manual conversion button
-                                convertImageButton.enabled = false
-                                // Connect signals to start automatically
-                                spriteModeComboBox.currentValueChanged.connect(optimiser.startImageConversionWrapper);
-                                bgModeComboBox.currentValueChanged.connect(optimiser.startImageConversionWrapper);
-                                xShiftSpinBox.valueModified.connect(optimiser.startImageConversionWrapper);
-                                yShiftSpinBox.valueModified.connect(optimiser.startImageConversionWrapper);
-                                maxBackgroundPalettesSpinBox.valueModified.connect(optimiser.startImageConversionWrapper);
-                                maxSpritePalettesSpinBox.valueModified.connect(optimiser.startImageConversionWrapper);
-                                maxSpritesPerScanlineSpinBox.valueModified.connect(optimiser.startImageConversionWrapper);
-                                optimiser.shiftXChanged.connect(optimiser.startImageConversionWrapper);
-                                optimiser.shiftYChanged.connect(optimiser.startImageConversionWrapper);
-                                optimiser.inputImageChanged.connect(optimiser.startImageConversionWrapper);
+                        Label {
+                            id: label11
+                            text: qsTr("Timeout")
+                        }
+
+                        SpinBox {
+                            id: timeOutSpinBox
+                            to: 999
+                            value: 30
+                            width: 140
+                            height: 32
+                            clip: false
+                            scale: 1
+                            wheelEnabled: true
+                            editable: true
+                            onValueChanged: optimiser.timeOut = value
+                        }
+                    }
+                    RowLayout {
+
+                        Label {
+                            id: label12
+                            text: qsTr("Bank Size")
+                        }
+                        ComboBox {
+                            id: exportBankSizeComboBox
+                            x: 0
+                            width: 0
+                            Layout.fillWidth: true
+                            enabled: false
+                            model: ["Default", "1kb", "2kb", "4kb"]
+                            Layout.fillHeight: false
+                            Layout.preferredHeight: 40
+                            Layout.preferredWidth: 90
+                            onCurrentIndexChanged: {
+                                const lookup = {"Default": 0, "1kb": 0x400, "2kb": 0x800, "4kb": 0x1000};
+                                optimiser.exportBankSize = lookup[model[currentIndex]];
                             }
-                            else
-                            {
-                                // Re-enable manual conversion button
-                                convertImageButton.enabled = true
-                                // Disconnect signals to stop starting automatically
-                                spriteModeComboBox.currentValueChanged.disconnect(optimiser.startImageConversionWrapper);
-                                bgModeComboBox.currentValueChanged.disconnect(optimiser.startImageConversionWrapper);
-                                xShiftSpinBox.valueModified.disconnect(optimiser.startImageConversionWrapper);
-                                yShiftSpinBox.valueModified.disconnect(optimiser.startImageConversionWrapper);
-                                maxBackgroundPalettesSpinBox.valueModified.disconnect(optimiser.startImageConversionWrapper);
-                                maxSpritePalettesSpinBox.valueModified.disconnect(optimiser.startImageConversionWrapper);
-                                maxSpritesPerScanlineSpinBox.valueModified.disconnect(optimiser.startImageConversionWrapper);
-                                optimiser.shiftXChanged.disconnect(optimiser.startImageConversionWrapper);
-                                optimiser.shiftYChanged.disconnect(optimiser.startImageConversionWrapper);
-                                optimiser.inputImageChanged.disconnect(optimiser.startImageConversionWrapper);
+                            Component.onCompleted: {
                             }
+                        }
+                    }
+                    RowLayout {
+                        Button {
+                            id: saveImageButton
+                            x: 0
+                            y: 88
+                            width: 206
+                            height: 32
+                            text: qsTr("Save converted PNG...")
+                            Component.onCompleted: {
+                                saveImageButton.onClicked.connect(saveConvertedDialog.openDialog);
+                            }
+                            enabled: false
+                        }
+                        Button {
+                            id: exportImageButton
+                            x: 0
+                            y: 124
+                            width: 206
+                            height: 32
+                            text: qsTr("Export...")
+                            Component.onCompleted: {
+                                exportImageButton.onClicked.connect(exportConvertedDialog.openDialog);
+                            }
+                            enabled: false
                         }
                     }
                 }

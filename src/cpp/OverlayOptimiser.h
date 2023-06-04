@@ -20,10 +20,10 @@
 #ifndef OVERLAY_OPTIMISER_H
 #define OVERLAY_OPTIMISER_H
 
+#include <functional>
 #include <string>
 #include <stdexcept>
 
-#include "ImageUtils.h"
 #include "GridLayer.h"
 #include "Array2D.h"
 #include "Sprite.h"

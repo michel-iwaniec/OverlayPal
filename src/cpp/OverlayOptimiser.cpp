@@ -27,6 +27,7 @@
 #include <functional>
 #include <vector>
 
+#include "ImageUtils.h"
 #include "SubProcess.h"
 
 #include "OverlayOptimiser.h"
