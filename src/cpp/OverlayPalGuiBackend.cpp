@@ -1154,13 +1154,12 @@ void OverlayPalGuiBackend::exportOutputImage(QString filename, int paletteMask)
     // For bgCHR, if we have more than one in the export, then we add the index of the nametable
     // to the filename when saving.
     for (int i = 0; i < exportData.bgCHR.size(); ++i) {
-        const auto idx = (exportData.bgCHR.size() == 1) ? QString() : QString("_%1").arg(i);
+        const auto idx = QString("_%1").arg(i);
         QString bgCHRFilename = QString("%1/%2_bg%3.chr").arg(fi.path(), fi.baseName(), idx);
         writeBinaryFile(bgCHRFilename, exportData.bgCHR[i]);
     }
-    if (!exportData.exram.empty()) {
-        writeBinaryFile(exramFilename, exportData.exram);
-    }
+
+    writeBinaryFile(exramFilename, exportData.exram);
     writeBinaryFile(nametableFilename, exportData.nametable);
     writeBinaryFile(oamFilename, exportData.oam);
     writeBinaryFile(sprCHRFilename, exportData.oamCHR);

@@ -197,9 +197,9 @@ void buildDataNES_BGBanked(const Image2D& image,
                      int exportBankSize,
                      const Array2D<uint8_t>& paletteIndicesBackground,
                      std::vector<uint8_t>& nametable,
+                     std::vector<uint8_t>& exRAM,
                      std::vector<std::vector<uint8_t>>& chr)
 {
-    std::vector<uint8_t> exRAM{};
     exRAM.clear();
     exRAM.resize(1024);
     nametable.clear();
@@ -365,6 +365,7 @@ ExportDataNES buildExportData(const OverlayOptimiser& optimiser, int paletteMask
                         exportBankSize,
                         optimiser.debugPaletteIndicesBackground(),
                         exportData.nametable,
+                        exportData.exram,
                         exportData.bgCHR);
     }
     // Sprite OAM / CHR
