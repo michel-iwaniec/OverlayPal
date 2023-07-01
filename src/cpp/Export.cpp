@@ -97,49 +97,51 @@ TileNES_8x8 extractTileNES_8x8(const Image2D& image, int paletteMask, int x, int
     return t;
 }
 
-//---------------------------------------------------------------------------------------------------------------------
+using TileMap = std::unordered_map<TileNES_8x8, size_t, TileNES_8x8_hash, TileNES_8x8_equal>;
 
-void buildDataNES_BG(const Image2D& image,
-                     int paletteMask,
-                     const Array2D<uint8_t>& paletteIndicesBackground,
-                     std::vector<uint8_t>& nametable,
-                     std::vector<uint8_t>& exRAM,
-                     std::vector<uint8_t>& chr)
+static void OutputTileRow(int y,
+                          const Image2D& image,
+                          int paletteMask,
+                          TileMap& tileDataToIndex,
+                          const Array2D<uint8_t>& paletteIndicesBackground,
+                          std::vector<uint8_t>& nametable,
+                          std::vector<uint8_t>& exRAM,
+                          std::vector<uint8_t>& chr)
 {
-    nametable.clear();
-    nametable.resize(1024);
-    exRAM.clear();
-    exRAM.resize(1024);
-    chr.clear();
-    std::unordered_map<TileNES_8x8, size_t, TileNES_8x8_hash, TileNES_8x8_equal> tileDataToIndex;
+
     int tileWidth = 8;
     int tileHeight = 8;
+    int nametableGridHeight = 30;
+    int nametableGridWidth = 32;
+    int scaleWidth = nametableGridWidth / paletteIndicesBackground.width();
+    int scaleHeight = nametableGridHeight / paletteIndicesBackground.height();
+    for(size_t x = 0; x < nametableGridWidth; x++)
+    {
+        uint8_t p = paletteIndicesBackground(x / scaleWidth, y / scaleHeight);
+        TileNES_8x8 t = extractTileNES_8x8(image, paletteMask, tileWidth * x, tileHeight * y, tileWidth, tileHeight, p);
+        if(!tileDataToIndex.count(t))
+        {
+            tileDataToIndex[t] = tileDataToIndex.size();
+            uint8_t* p = reinterpret_cast<uint8_t*>(&t.p0);
+            for(int y = 0; y < 2 * tileHeight; y++)
+            {
+                chr.push_back(p[y]);
+            }
+        }
+        int tileIndex = tileDataToIndex[t];
+        nametable[nametableGridWidth * y + x] = tileIndex & 0xFF;
+        exRAM[nametableGridWidth * y + x] = (p << 6) | (tileIndex >> 8);
+    }
+}
+
+static void OutputAttributes(std::vector<uint8_t>& nametable,
+                             std::vector<uint8_t>& exRAM)
+{
+
     int nametableGridWidth = 32;
     int nametableGridHeight = 30;
     int attributeGridWidth = 16;
     int attributeGridHeight = 15;
-    int scaleWidth = nametableGridWidth / paletteIndicesBackground.width();
-    int scaleHeight = nametableGridHeight / paletteIndicesBackground.height();
-    for(size_t y = 0; y < nametableGridHeight; y++)
-    {
-        for(size_t x = 0; x < nametableGridWidth; x++)
-        {
-            uint8_t p = paletteIndicesBackground(x / scaleWidth, y / scaleHeight);
-            TileNES_8x8 t = extractTileNES_8x8(image, paletteMask, tileWidth * x, tileHeight * y, tileWidth, tileHeight, p);
-            if(!tileDataToIndex.count(t))
-            {
-                tileDataToIndex[t] = tileDataToIndex.size();
-                uint8_t* p = reinterpret_cast<uint8_t*>(&t.p0);
-                for(int y = 0; y < 2 * tileHeight; y++)
-                {
-                    chr.push_back(p[y]);
-                }
-            }
-            int tileIndex = tileDataToIndex[t];
-            nametable[nametableGridWidth * y + x] = tileIndex & 0xFF;
-            exRAM[nametableGridWidth * y + x] = (p << 6) | (tileIndex >> 8);
-        }
-    }
     // Write non-MMC5 16x16 attributes
     Array2D<uint8_t> colorTable(attributeGridWidth, attributeGridHeight + 1);
     for(int y = 0; y < attributeGridHeight; y++)
@@ -163,6 +165,86 @@ void buildDataNES_BG(const Image2D& image,
             nametable[attributesOffset + 8 * y + x] = a;
         }
     }
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+
+void buildDataNES_BG(const Image2D& image,
+                     int paletteMask,
+                     const Array2D<uint8_t>& paletteIndicesBackground,
+                     std::vector<uint8_t>& nametable,
+                     std::vector<uint8_t>& exRAM,
+                     std::vector<uint8_t>& chr)
+{
+    nametable.clear();
+    nametable.resize(1024);
+    exRAM.clear();
+    exRAM.resize(1024);
+    chr.clear();
+    TileMap tileDataToIndex;
+    constexpr int nametableGridHeight = 30;
+    for(size_t y = 0; y < nametableGridHeight; y++)
+    {
+        OutputTileRow(y, image, paletteMask, tileDataToIndex, paletteIndicesBackground, nametable, exRAM, chr);
+    }
+    OutputAttributes(nametable, exRAM);
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+
+void buildDataNES_BGBanked(const Image2D& image,
+                     int paletteMask,
+                     int exportBankSize,
+                     const Array2D<uint8_t>& paletteIndicesBackground,
+                     std::vector<uint8_t>& nametable,
+                     std::vector<uint8_t>& exRAM,
+                     std::vector<std::vector<uint8_t>>& chr)
+{
+    exRAM.clear();
+    exRAM.resize(1024);
+    nametable.clear();
+    nametable.resize(1024);
+    chr.clear();
+    chr.push_back({});
+    using TileMap = std::unordered_map<TileNES_8x8, size_t, TileNES_8x8_hash, TileNES_8x8_equal>;
+    TileMap tileDataToIndex = {};
+    int currentBank = 0;
+    int tileWidth = 8;
+    int tileHeight = 8;
+    int nametableGridWidth = 32;
+    int nametableGridHeight = 30;
+    int scaleWidth = nametableGridWidth / paletteIndicesBackground.width();
+    int scaleHeight = nametableGridHeight / paletteIndicesBackground.height();
+    for(size_t y = 0; y < nametableGridHeight; y++)
+    {
+        // make a copy of the hash map
+        auto bankMap = tileDataToIndex;
+        bool nextBank = false;
+        // loop through this row of tiles to see if it can fit in the current bank
+        for(size_t x = 0; x < nametableGridWidth; x++)
+        {
+            uint8_t p = paletteIndicesBackground(x / scaleWidth, y / scaleHeight);
+            TileNES_8x8 t = extractTileNES_8x8(image, paletteMask, tileWidth * x, tileHeight * y, tileWidth, tileHeight, p);
+            if(!bankMap.count(t))
+            {
+                bankMap[t] = bankMap.size();
+            }
+            if (bankMap.size() > (exportBankSize / 16)) {
+                nextBank = true;
+                break;
+            }
+        }
+
+        // if it overflows this bank, bump to the next bank and start fresh
+        if (nextBank) {
+            tileDataToIndex.clear();
+            currentBank++;
+            chr.push_back({});
+        }
+
+        OutputTileRow(y, image, paletteMask, tileDataToIndex, paletteIndicesBackground, nametable, exRAM, chr[currentBank]);
+    }
+    OutputAttributes(nametable, exRAM);
 }
 
 //---------------------------------------------------------------------------------------------------------------------
@@ -261,17 +343,31 @@ void buildDataNES_palette(const std::vector<std::set<uint8_t> > &palettes, uint8
 
 //---------------------------------------------------------------------------------------------------------------------
 
-ExportDataNES buildExportData(const OverlayOptimiser& optimiser, int paletteMask)
+ExportDataNES buildExportData(const OverlayOptimiser& optimiser, int paletteMask, int exportBankSize)
 {
     ExportDataNES exportData;
     Image2D image = optimiser.outputImage();
     // Background nametable / CHR
-    buildDataNES_BG(image,
-                    paletteMask,
-                    optimiser.debugPaletteIndicesBackground(),
-                    exportData.nametable,
-                    exportData.exram,
-                    exportData.bgCHR);
+    // if there is no bank size, then we can
+    if (exportBankSize == 0) {
+        exportData.bgCHR.clear();
+        exportData.bgCHR.resize(1);
+        exportData.bgCHR[0] = {};
+        buildDataNES_BG(image,
+                        paletteMask,
+                        optimiser.debugPaletteIndicesBackground(),
+                        exportData.nametable,
+                        exportData.exram,
+                        exportData.bgCHR[0]);
+    } else {
+        buildDataNES_BGBanked(image,
+                        paletteMask,
+                        exportBankSize,
+                        optimiser.debugPaletteIndicesBackground(),
+                        exportData.nametable,
+                        exportData.exram,
+                        exportData.bgCHR);
+    }
     // Sprite OAM / CHR
     if(optimiser.spriteHeight() == 16)
         buildDataNES_OAM_8x16(image, paletteMask, optimiser.spritesOverlay(), exportData.oam, exportData.oamCHR);

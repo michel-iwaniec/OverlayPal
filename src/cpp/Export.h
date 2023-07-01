@@ -29,13 +29,13 @@ struct ExportDataNES
 {
     std::vector<uint8_t> nametable;
     std::vector<uint8_t> exram;
-    std::vector<uint8_t> bgCHR;
+    std::vector<std::vector<uint8_t>> bgCHR;
     std::vector<uint8_t> oamCHR;
     std::vector<uint8_t> oam;
     std::vector<uint8_t> palette;
     static constexpr size_t TileSize = 16;
 };
 
-ExportDataNES buildExportData(const OverlayOptimiser& optimiser, int paletteMask);
+ExportDataNES buildExportData(const OverlayOptimiser& optimiser, int paletteMask, int exportBankSize);
 
 #endif // EXPORT_H

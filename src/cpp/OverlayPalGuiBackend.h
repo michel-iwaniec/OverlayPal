@@ -57,6 +57,7 @@ class OverlayPalGuiBackend : public QObject
     Q_PROPERTY(bool conversionSuccessful READ conversionSuccessful)
     Q_PROPERTY(QString conversionError READ conversionError)
     Q_PROPERTY(int numBackgroundTiles READ numBackgroundTiles)
+    Q_PROPERTY(int exportBankSize READ exportBankSize WRITE setExportBankSize)
 
 public:
     explicit OverlayPalGuiBackend(QObject *parent = nullptr);
@@ -95,6 +96,8 @@ public:
     void setMaxSpritePalettes(int maxSpritePalettes);
     int maxSpritesPerScanline() const;
     void setMaxSpritesPerScanline(int maxSpritesPerScanline);
+    int exportBankSize() const;
+    void setExportBankSize(int exportBankSize);
 
     int timeOut() const;
     void setTimeOut(int timeOut);
@@ -194,6 +197,7 @@ private:
     int mMaxBackgroundPalettes;
     int mMaxSpritePalettes;
     int mMaxSpritesPerScanline;
+    int mExportBankSize;
     bool mMapInputColors;
     uint8_t mBackgroundColor;
     bool mAutoBackgroundColor;

@@ -174,6 +174,7 @@ Window {
             // Enable save/export now that output image is valid
             saveImageButton.enabled = true;
             exportImageButton.enabled = true;
+            exportBankSizeComboBox.enabled = true;
         }
 
         function startImageConversionWrapper()
@@ -829,7 +830,7 @@ Window {
 
             GroupBox {
                 id: gridCellDebugGroupBox
-                width: 360
+                width: 344
                 height: 200
                 spacing: 6
                 title: qsTr("Grid Cell Debug Mode")
@@ -930,74 +931,22 @@ Window {
 
             GroupBox {
                 id: saveGroupBox
-                width: 230
+                width: 262
                 height: 200
                 title: qsTr("Output")
                 enabled: false
 
-                Button {
-                    id: saveImageButton
+                GridLayout {
                     x: 0
-                    y: 88
-                    width: 206
-                    height: 32
-                    text: qsTr("Save converted PNG...")
-                    Component.onCompleted: {
-                        saveImageButton.onClicked.connect(saveConvertedDialog.openDialog);
-                    }
-                    enabled: false
-                }
-                Button {
-                    id: exportImageButton
-                    x: 0
-                    y: 124
-                    width: 206
-                    height: 32
-                    text: qsTr("Export...")
-                    Component.onCompleted: {
-                        exportImageButton.onClicked.connect(exportConvertedDialog.openDialog);
-                    }
-                    enabled: false
-                }
-                RowLayout {
-                    x: 0
-                    y: 44
-                    width: 184
-                    height: 36
-                    spacing: 8
-
-                    Label {
-                        id: label11
-                        text: qsTr("Timeout")
-                    }
-
-                    SpinBox {
-                        id: timeOutSpinBox
-                        to: 999
-                        value: 30
-                        width: 140
-                        height: 32
-                        clip: false
-                        scale: 1
-                        wheelEnabled: true
-                        editable: true
-                        onValueChanged: optimiser.timeOut = value
-                    }
-                }
-
-                RowLayout {
-                    x: 0
-                    y: 0
-                    height: 36
-                    spacing: 8
+                    y: 2
+                    rows: 4
+                    columns: 2
+                    rowSpacing: 4
 
                     Button {
                         id: convertImageButton
-                        y: 0
-                        height: 32
-                        text: qsTr("Convert")
                         Layout.preferredHeight: 36
-                        Layout.preferredWidth: 103
+                        text: qsTr("Convert")
                         onClicked: {
                             optimiser.startImageConversionWrapper();
                         }
@@ -1005,7 +954,7 @@ Window {
 
                     CheckBox {
                         id: autoConversionCheckBox
-                        height: 32
+                        Layout.preferredHeight: 36
                         text: qsTr("Auto")
                         antialiasing: true
                         onCheckedChanged: {
@@ -1042,6 +991,64 @@ Window {
                                 optimiser.inputImageChanged.disconnect(optimiser.startImageConversionWrapper);
                             }
                         }
+                    }
+
+                    Label {
+                        id: label11
+                        text: qsTr("Timeout")
+                    }
+
+                    SpinBox {
+                        id: timeOutSpinBox
+                        to: 999
+                        value: 30
+			Layout.preferredWidth: 120
+                        Layout.preferredHeight: 36
+                        clip: false
+                        scale: 1
+                        wheelEnabled: true
+                        editable: true
+                        onValueChanged: optimiser.timeOut = value
+                    }
+
+                    Label {
+                        id: label12
+                        text: qsTr("BG Bank Size")
+                    }
+
+                    ComboBox {
+                        id: exportBankSizeComboBox
+                        enabled: false
+                        model: ["Off", "64 (1kB)", "128 (2kB)", "256 (4kB)"]
+                        Layout.fillHeight: false
+			Layout.preferredWidth: 120
+                        Layout.preferredHeight: 36
+                        onCurrentIndexChanged: {
+                            const lookup = { "Off" : 0x0000, "64 (1kB)" : 0x0400, "128 (2kB)" :0x0800, "256 (4kB)" : 0x1000};
+                            optimiser.exportBankSize = lookup[model[currentIndex]];
+                        }
+                        Component.onCompleted: {
+                        }
+                    }
+                    Button {
+                        id: saveImageButton
+                        Layout.preferredHeight: 36
+                        text: qsTr("Save PNG...")
+                        Component.onCompleted: {
+                            saveImageButton.onClicked.connect(saveConvertedDialog.openDialog);
+                        }
+                        enabled: false
+                    }
+
+                    Button {
+                        id: exportImageButton
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: 36
+                        text: qsTr("Export...")
+                        Component.onCompleted: {
+                            exportImageButton.onClicked.connect(exportConvertedDialog.openDialog);
+                        }
+                        enabled: false
                     }
                 }
 

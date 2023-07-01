@@ -124,11 +124,17 @@ This allows you to save the converted image (with palette display settings appli
 
 This allows exporting the converted image (with palette display settings applied) to the binary formats used by the NES PPU hardware and other NES graphics editing tools.
 
+When generating the output files, there is an option to change the way the files are setup in order to support different mapper configurations.
+
+* Bank Size:
+  * Default - Includes all of the BG tiles in a single `.chr` file. This mode is most useful for the MMC5 mapper, as combined with the exram file, it is able to access all of the CHR banks without bank switching.
+  * 1,2,4Kb - Split into multiple `.chr` files with a maximum size of 1, 2, or 4Kb. The nametable will only reference a new bank at the start of a row, so the user can safely switch graphics during HBlank without visual corruption. Additionally, once a new bank is started, the nametable will only reference tiles from that bank (and will duplicate tiles from previous banks if they are used again)
+
 More specifically, the following files are saved:
 
 * [filename].nam file - The 1kB NES nametable data storing tile indices and 16x16 attributes selecting palettes
-* [filename].exram - Extended bits for tile indices and 8x8 attributes, matching the MMC5 exRAM layout
-* [filename]_bg.chr - The character data for the background layer
+* [filename].exram - Extended bits for tile indices and 8x8 attributes, matching the MMC5 exRAM layout. Only exported when using `Default` bank size.
+* [filename]_bg.chr - The character data for the background layer. When exporting with a maximum bank size selected, the file pattern will be [filename]\_bg\_$i.chr where $i is the bank number.
 * [filename]_spr.chr - The character data for the sprite layer
 * [filename].oam - Tile indices / positions / palette selection for sprites, encoded in NES Object Attribute Memory format
 * [filename]_palette.dat - The 32-entry palette representing NES PPU colors
